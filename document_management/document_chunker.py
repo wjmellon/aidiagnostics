@@ -2,6 +2,7 @@
 from langchain_community.document_loaders import TextLoader
 from langchain.text_splitter import CharacterTextSplitter
 
+# look into best chunking strategy
 
 def load_and_chunk_document(path, chunk_size=500, chunk_overlap=50):
     loader = TextLoader("data/aggregated.txt")
