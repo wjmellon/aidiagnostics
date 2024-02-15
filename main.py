@@ -15,7 +15,7 @@ import os
 print(os.environ['OPENAI_API_KEY'])
 
 # Define your constants and configurations
-URL = "https://raw.githubusercontent.com/wjmellon/aidiagnostics/main/aggregated.txt"
+URL = "https://raw.githubusercontent.com/wjmellon/aidiagnostics/main/testlink1.txt"
 PATH_TO_SAVE = "data/aggregated.txt"
 TEMPLATE_STR = """You are an assistant for question-answering tasks. These questions are about Acral Lentiginous Melanoma.
 You must use the provided pieces of context to answer questions. 

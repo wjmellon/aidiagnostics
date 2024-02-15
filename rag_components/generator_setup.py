@@ -3,6 +3,8 @@ from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema.output_parser import StrOutputParser
 
+#temperature = 0 means more precision because its a lower number
+
 def setup_prompt(template_str):
     return ChatPromptTemplate.from_template(template_str)
 
