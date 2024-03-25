@@ -8,7 +8,7 @@ from langchain.schema.output_parser import StrOutputParser
 def setup_prompt(template_str):
     return ChatPromptTemplate.from_template(template_str)
 
-def initialize_llm(model_name="gpt-4", temperature=0):
+def initialize_llm(model_name="gpt-3.5-turbo", temperature=0):
     return ChatOpenAI(model_name=model_name, temperature=temperature)
 
 def build_rag_chain(retriever, prompt):
