@@ -17,7 +17,7 @@ print(os.environ['OPENAI_API_KEY'])
 # Define your constants and configurations
 URL = "https://raw.githubusercontent.com/wjmellon/aidiagnostics/main/testlink1.txt"
 PATH_TO_SAVE = "data/aggregated.txt"
-TEMPLATE_STR = """You are an assistant for question-answering tasks. These questions are about Acral Lentiginous Melanoma.
+TEMPLATE_STR = """You are an assistant for question-answering tasks. These questions are about skin cancer.
 You must use the provided pieces of context to answer questions. 
 If you don't know the answer, just say that you don't know. 
 Answer in a clinical dermatology setting. Give the user a citation from the text, author, section, and quote from text.
