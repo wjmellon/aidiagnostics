@@ -1,5 +1,4 @@
 
-
 import weaviate
 from langchain_community.vectorstores.weaviate import Weaviate
 from langchain_openai.embeddings import OpenAIEmbeddings
@@ -11,6 +10,6 @@ def initialize_vectorstore(chunks):
         client=client,
         documents=chunks,
         embedding=OpenAIEmbeddings(),
-        by_text=False
+        by_text=False,
     )
     return vectorstore.as_retriever()

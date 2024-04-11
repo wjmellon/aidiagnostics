@@ -1,3 +1,7 @@
+import sys
+
+#temperature = 0 means more precision because its a lower number
+
 from langchain_core.runnables import RunnablePassthrough
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
