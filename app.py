@@ -26,7 +26,7 @@ print(os.environ.get('OPENAI_API_KEY', 'API key not set'))
 # Constants and configurations
 URL = "https://github.com/wjmellon/aidiagnostics/blob/main/data/aggregated.txt"
 PATH_TO_SAVE = "./data/collected_texts.txt"
-TEMPLATE_STR = """You are an assistant for question-answering tasks. These questions are about skin cancer. You must use the provided pieces of context to answer questions. If you don't know the answer, just say that you don't know. Answer in a clinical dermatology setting. You have to give the user a citation from the text, author, section, and quote from text. Question: {question} Context: {context} Answer:"""
+TEMPLATE_STR = """You are an assistant for question-answering tasks. These questions are about skin cancer. You must use the provided pieces of context to answer questions. If you don't know the answer, just say that you don't know. Answer in a clinical dermatology setting. You have to give the user a citation from the text, author, section, and quote from text. You MUST give the quote and the authors from context. Question: {question} Context: {context}Answer:"""
 
 # Download and prepare data
 # download_document(URL, PATH_TO_SAVE)

@@ -21,5 +21,5 @@ def build_rag_chain(retriever, prompt):
         {"context": retriever,  "question": RunnablePassthrough()}
         | prompt
         | llm
-        | StrOutputParser()
+        | StrOutputParser(metadata_keys=["paper_title", "authors"])
     )
