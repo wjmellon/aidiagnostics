@@ -3,6 +3,7 @@ from langchain_community.vectorstores.weaviate import Weaviate
 from langchain_openai.embeddings import OpenAIEmbeddings
 from weaviate.embedded import EmbeddedOptions
 from document_management.document_chunker import load_and_chunk_document
+import os
 
 def initialize_vectorstore(chunks):
     # Set up the Weaviate client
@@ -52,4 +53,32 @@ def initialize_vectorstore(chunks):
         by_text=False,
     )
     return vectorstore.as_retriever()
+
+
+client = weaviate.Client(
+    url="https://aidiag-yrjn4mqf.weaviate.network",  # Ensure this is your correct cloud instance URL
+    auth_client_secret=weaviate.auth.AuthApiKey(api_key="PJ2ajygrzY7UICcaUseQxZEhl5K4NReGrLoX")
+    )
+#test_query = client.query.get('Chunk', properties=['text', 'index', 'document']).do()
+#print(test_query)
+
+def initialize_cloud_retriever():
+    client = weaviate.Client(
+        url="https://aidiag-yrjn4mqf.weaviate.network",  # Ensure this is your correct cloud instance URL
+        auth_client_secret=weaviate.auth.AuthApiKey(api_key="PJ2ajygrzY7UICcaUseQxZEhl5K4NReGrLoX"),
+        additional_headers={"X-OpenAI-Api-Key": os.environ.get('OPENAI_API_KEY', 'API key not set')
+                            # <-- Replace with your API key
+                            }
+    )
+
+    # Initialize the vector store with the correct index and text key
+    vectorstore = Weaviate(
+        client=client,
+        index_name="DocumentChunk",  # Replace with your actual class name in Weaviate
+        text_key="text"  # Replace with the property name that contains the main text data
+    )
+
+    return vectorstore.as_retriever()
+
+
 

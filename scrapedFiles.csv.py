@@ -24,7 +24,7 @@ def scrape_text_from_url(url):
         return ""
 
 # Load the CSV file
-df = pd.read_csv('./citations.csv', usecols=["Citation"])
+df = pd.read_csv('document_management/citations.csv', usecols=["Citation"])
 
 # Verify if df is empty
 if df.empty:

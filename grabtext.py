@@ -15,7 +15,7 @@ def scrape_text_from_url(url):
         return ""
 
 # Load the CSV file
-df = pd.read_csv('./citations.csv')
+df = pd.read_csv('document_management/citations.csv')
 
 # Regular expression pattern for URLs
 url_pattern = r'https?://\S+'
