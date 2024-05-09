@@ -26,7 +26,7 @@ print(os.environ.get('OPENAI_API_KEY', 'API key not set'))
 # Constants and configurations
 URL = "https://github.com/wjmellon/aidiagnostics/blob/main/data/aggregated.txt"
 PATH_TO_SAVE = "./data/collected_texts.txt"
-TEMPLATE_STR = """You are an assistant for question-answering tasks. These questions are about skin cancer. You must use the provided pieces of context to answer questions. If you don't know the answer, just say that you don't know. Answer in a clinical dermatology setting. You have to give the user a citation from the text, author, section, and quote from text. You MUST give the quote and the authors from context. Question: {question} Context: {context}Answer:"""
+TEMPLATE_STR = """You are an assistant for question-answering tasks. These questions are about skin cancer. You must use the provided pieces of context to answer questions. If you don't know the answer, just say that you don't know. Answer in a clinical dermatology setting. You have to give the user a citation from the text, author, section, and quote from text. You MUST give the quote and the authors from context. You need to be exact. Dont give references to general question with answers about specific concepts, references HAVE to match answers well. Question: {question} Context: {context}Answer:"""
 
 
 
@@ -70,6 +70,34 @@ def ask_question():
         #Return question and answer in JSON format
         return jsonify(question=question, answer=response)
     return jsonify(error="No question provided"), 400
+
+# @app.route('/ask', methods=['POST'])
+# def ask_question():
+#     question = request.form['question']
+#     if question:
+#         try:
+#             # Use your rag_chain to get the response
+#             response = (
+#                 client.query
+#                 .get("DocumentChunk", ['title', 'authors', 'text'])
+#                 .with_near_text({"concepts": [question]})
+#                 .with_generate(
+#                     grouped_task="Answer the question using the text. Try to keep it brief. Quote the most important parts of text after answer. Only report on stuff you know about and that is relevant to the question. You MUST provide quotes that are relevant. {authors} {title}"
+#                 )
+#                 .with_limit(10)
+#                 .do()
+#             )
+#
+#             # Convert response to a string
+#             response_str = str(response)
+#
+#             # Print and return the response as a string
+#             print(response_str)
+#             return jsonify(question=question, answer=response_str)
+#         except Exception as e:
+#             # Generic exception handling
+#             return jsonify(error=str(e)), 500
+#     return jsonify(error="No question provided"), 400
 
 
 
