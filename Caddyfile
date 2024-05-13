@@ -1,8 +1,3 @@
-www.proggyai.com {
-    redir https://proggyai.com{uri}  
-}
-
-
-proggyai.com {
+54.184.4.218 {
     reverse_proxy localhost:8000  
 }
