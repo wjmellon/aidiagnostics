@@ -30,12 +30,12 @@ TEMPLATE_STR = """You are an assistant for question-answering tasks. These quest
 
 
 
+# Initialize Weaviate client
 client = weaviate.Client(
-    url="https://aidiag-yrjn4mqf.weaviate.network",  # Ensure this is your correct cloud instance URL
-    auth_client_secret=weaviate.auth.AuthApiKey(api_key="PJ2ajygrzY7UICcaUseQxZEhl5K4NReGrLoX"),
-    additional_headers={ "X-OpenAI-Api-Key":os.environ.get('OPENAI_API_KEY', 'API key not set')   # <-- Replace with your API key
-    }
-    )
+    url="https://aichatpublic-zrouzts8.weaviate.network",  # Ensure this is your correct cloud instance URL
+    auth_client_secret=weaviate.auth.AuthApiKey(api_key="uIV5lCa7lbpj4sjDyBIrbicGquVDbWuTcZHE"),
+    additional_headers={ "X-OpenAI-Api-Key":os.environ.get('OPENAI_API_KEY', 'API key not set') }
+)
 
 # Download and prepare data
 # download_document(URL, PATH_TO_SAVE)
