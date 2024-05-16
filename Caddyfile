@@ -1,4 +1,4 @@
-www.proggyai.com{
+www.proggyai.com {
     redir https://proggyai.com{uri}
 }
 
