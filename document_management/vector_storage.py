@@ -55,20 +55,13 @@ def initialize_vectorstore(chunks):
     return vectorstore.as_retriever()
 
 
-client = weaviate.Client(
-    url="https://aidiag-yrjn4mqf.weaviate.network",  # Ensure this is your correct cloud instance URL
-    auth_client_secret=weaviate.auth.AuthApiKey(api_key="PJ2ajygrzY7UICcaUseQxZEhl5K4NReGrLoX")
-    )
 #test_query = client.query.get('Chunk', properties=['text', 'index', 'document']).do()
 #print(test_query)
 
 def initialize_cloud_retriever():
     client = weaviate.Client(
-        url="https://aidiag-yrjn4mqf.weaviate.network",  # Ensure this is your correct cloud instance URL
-        auth_client_secret=weaviate.auth.AuthApiKey(api_key="PJ2ajygrzY7UICcaUseQxZEhl5K4NReGrLoX"),
-        additional_headers={"X-OpenAI-Api-Key": os.environ.get('OPENAI_API_KEY', 'API key not set')
-                            # <-- Replace with your API key
-                            }
+        url="http://localhost:8080",  # Ensure this is your correct cloud instance URL
+        additional_headers={"X-OpenAI-Api-Key": os.getenv('OPENAI_API_KEY')}
     )
 
     # Initialize the vector store with the correct index and text key
