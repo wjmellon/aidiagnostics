@@ -24,22 +24,23 @@ ssl._create_default_https_context = ssl._create_unverified_context
 print(os.environ.get('OPENAI_API_KEY', 'API key not set'))
 
 # Constants and configurations
-URL = "https://github.com/wjmellon/aidiagnostics/blob/main/data/aggregated.txt"
-PATH_TO_SAVE = "./data/collected_texts.txt"
+#URL = "https://github.com/wjmellon/aidiagnostics/blob/main/data/aggregated.txt"
+#PATH_TO_SAVE = "./data/collected_texts.txt"
 TEMPLATE_STR = """You are an assistant for question-answering tasks. These questions are about skin cancer. You must use the provided pieces of context to answer questions. If you don't know the answer, just say that you don't know. Answer in a 6th grade reading level and public outreach setting, with medium detail. You have to give the user a citation from the text, author, section, and quote from text. You MUST give the quote and the authors from context. You need to be exact. Dont give references to general question with answers about specific concepts, references HAVE to match answers well. Question: {question} Context: {context}Answer:"""
 
 
+#
+# # Initialize Weaviate client
+# client = weaviate.Client(
+#     url="https://aichatpublic-zrouzts8.weaviate.network",  # Ensure this is your correct cloud instance URL
+#     auth_client_secret=weaviate.auth.AuthApiKey(api_key="uIV5lCa7lbpj4sjDyBIrbicGquVDbWuTcZHE"),
+#     additional_headers={ "X-OpenAI-Api-Key":os.environ.get('OPENAI_API_KEY', 'API key not set') }
+# )
 
-# Initialize Weaviate client
-client = weaviate.Client(
-    url="https://aichatpublic-zrouzts8.weaviate.network",  # Ensure this is your correct cloud instance URL
-    auth_client_secret=weaviate.auth.AuthApiKey(api_key="uIV5lCa7lbpj4sjDyBIrbicGquVDbWuTcZHE"),
-    additional_headers={ "X-OpenAI-Api-Key":os.environ.get('OPENAI_API_KEY', 'API key not set') }
-)
 
 # Download and prepare data
 # download_document(URL, PATH_TO_SAVE)
-chunks = load_and_chunk_document(PATH_TO_SAVE)
+#chunks = load_and_chunk_document(PATH_TO_SAVE)
 #chunks = split_text(PATH_TO_SAVE,100)
 retriever = initialize_cloud_retriever()
 prompt = setup_prompt(TEMPLATE_STR)
