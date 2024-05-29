@@ -2,192 +2,285 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>Ask a Question</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css">
+    <link rel="icon" href="{{ url_for('static', filename='proggylogo.svg') }}" type="image/svg+xml">
     <style>
-        
-        body {
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            background-color: #fefefe;
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+        * {
             margin: 0;
             padding: 0;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh; /* Changed from height to min-height */
             box-sizing: border-box;
-        }
-        h1 {
-            text-align: center;
-            padding-left: 0%;
-            width: 100%;
-            margin: 0;
-            color: white; /* Maroon */
-            font-size: 1.5em; /* Increase heading font size */
-            background-color: #800000;
-            padding: 20px 0;
-            padding-bottom: 15px; 
-            position: fixed;
-        }
-        #chat-container {
-            flex: 1; /* Allows chat-container to grow and fill available space */
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            padding-top: 5%;
-            overflow: hidden; /* Prevents overflow from the chat container */
-        }
-        
-        #messages-container {
-            overflow-y: auto; /* Change back to auto */
-            flex-grow: 1;
-            padding-bottom: 5%;
-            padding-top: 2%;
-            padding-left: 10%;
-            display: flex;
-            flex-direction: column; /* Ensure natural top-to-bottom flow */
-            justify-content: flex-end; /* Changed to end to align items to the bottom */
         }
 
-        .message {
-            padding: 10px 15px;
-            margin-bottom: 15px;
-            border-radius: 20px;
-            max-width: 80%;
-            word-wrap: break-word;
-            align-self: center; /* Center the text boxes */
+        html, body {
+            height: 100%;
+            overflow: hidden;
         }
-    
-        form {
-            width: 100%;
-            box-sizing: border-box;
+
+        body {
+            font-family: 'Poppins', sans-serif;
             display: flex;
-            position: fixed;
-            bottom: 0;
-            background-color: #fff5e6;
-            padding: 10px;
-            border-radius: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            z-index: 100; /* Ensure form stays above other content */
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            margin: 0;
         }
-        input[type="text"] {
-            flex: 1;
+
+        .wrapper {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #f0f0f0;
+        }
+
+        .title {
+            background: #51989E;
+            color: white;
+            line-height: 2.5;
+            text-align: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .box {
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column-reverse;
             padding: 10px;
+        }
+
+        .item {
+            display: flex;
+            align-items: center;
+            padding: 5px 10px;
+            margin-bottom: 10px;
+        }
+
+        .icon {
+            background: #51989E;
+            color: white;
+            width: 40px;
+            height: 40px;
+            text-align: center;
+            line-height: 40px;
+            border-radius: 50%;
             margin-right: 10px;
-            border: 2px solid #800000; /* Maroon */
-            border-radius: 15px;
-            outline: none;
         }
-        button {
-            padding: 10px 20px;
-            background-color: #800000; /* Maroon */
-            color: #FFD700; /* Gold */
-            border: none;
-            border-radius: 15px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            white-space: nowrap; /* Prevents the button text from breaking into multiple lines */
-            flex-shrink: 0; /* Prevents the button from shrinking */
-        }
-        button:hover {
-            background-color: #990000; /* Darker Maroon */
-        }
-        .message {
-            padding: 10px 15px;
-            margin-bottom: 15px;
-            border-radius: 20px;
-            max-width: 80%;
+
+        .msg {
+            max-width: 70%;
+            padding: 10px;
+            border-radius: 10px;
             word-wrap: break-word;
         }
-        .question {
-            background-color: #FFD700; /* Gold */
-            align-self: flex-end;
-            border-bottom-right-radius: 2px;
+
+        .right {
+            justify-content: flex-end;
         }
-        .answer {
-            background-color: #800000; /* Maroon */
-            color: #ffffff; /* White */
-            align-self: flex-start;
-            border-bottom-left-radius: 2px;
+
+        .right .msg {
+            background: #efefef;
+            color: #333;
+            margin-right: 10px;
         }
-        .question, .answer {
+
+        .right .icon {
+            order: 2;
+            margin-left: 10px;
+        }
+
+        .left .msg {
+            background: #51989E;
+            color: white;
+            margin-right: 10px;
+        }
+
+        .left .icon {
+            margin-right: 10px;
+        }
+
+        .left .icon img {
+            border-radius: 0; /* Remove the circle background for the bot logo */
+        }
+
+        .common-questions {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+        }
+
+        .common-questions img {
+            width: 100px;
+            margin-bottom: 20px;
+        }
+
+        .common-questions button {
+            background: transparent;
+            color: #51989E;
+            border: 2px solid #51989E;
+            width: 150px;
+            height: 100px;
+            margin: 10px;
+            font-size: 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             text-align: center;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .common-questions button:hover {
+            background: #51989E;
+            color: white;
+        }
+
+        .typing-area {
+            background: #efefef;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            flex-shrink: 0;
+        }
+
+        .input-field {
+            width: 100%;
+            position: relative;
+        }
+
+        .input-field input {
+            width: calc(100% - 80px);
+            padding: 10px;
+            border: 1px solid transparent;
+            border-radius: 3px;
+            outline: none;
+            height: 40px;
+        }
+
+        .input-field button {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: none;
+            width: 60px;
+            height: 40px;
+            border-radius: 3px;
+            color: white;
+            background: #51989E;
+            outline: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3F7277;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         @media (max-width: 600px) {
-            h1 {
-                font-size: 1.2em;
-                padding-bottom: 5%;
-            }
-            form {
-                position: fixed; /* Keep the form fixed at the bottom */
-                bottom: 0; /* Align it to the bottom */
-                width: 100%; /* Ensure it spans the width of the screen */
-                padding-bottom: 20px; /* Add extra space at the bottom */
-            }
-            
-            #chat-container {
-                margin-bottom: 60px;
-                font-size: .7em; /* Add extra space at the bottom so content isn't hidden by the form */
-            }
-            #messages-container{
-                padding-left: 10%;
-
+            .msg {
+                max-width: 100%;
             }
         }
     </style>
+    <title>proggy</title>
 </head>
 <body>
-    <h1>Ask a Question about Skin Cancer</h1>
-    <div id="chat-container">
-        <div id="messages-container">
-            <div id="history">
-                <!-- Previous questions and answers will be appended here -->
+    <div class="wrapper">
+        <div class="title">proggy</div>
+        <div class="common-questions" id="common-questions">
+            <img src="{{ url_for('static', filename='proggylogo.svg') }}" alt="Proggy Logo">
+            <button onclick="submitPredefinedQuestion('What is skin cancer?')">What is skin cancer?</button>
+            <button onclick="submitPredefinedQuestion('How do I prevent skin cancer?')">How do I prevent skin cancer?</button>
+            <button onclick="submitPredefinedQuestion('How do I know if I have skin cancer?')">How do I know if I have skin cancer?</button>
+        </div>
+        <div class="box" id="history">
+            <!-- This is where the chat will appear -->
+        </div>
+        <div class="typing-area">
+            <div class="input-field">
+                <input type="text" placeholder="Type your message" required onkeypress="handleKeyPress(event)">
+                <button id="send-button" onclick="submitQuestion()">Send</button>
             </div>
         </div>
     </div>
-    <form onsubmit="submitQuestion(event)">
-        <input type="text" name="question" placeholder="Enter your question here" required>
-        <button type="submit">Ask</button>
-    </form>
 
     <script>
-        function submitQuestion(event) {
-            event.preventDefault();
-            var formData = new FormData();
-            formData.append('question', document.querySelector('input[name="question"]').value);
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                submitQuestion();
+            }
+        }
+
+        function submitQuestion() {
+            const inputField = document.querySelector('.input-field input');
+            submitPredefinedQuestion(inputField.value);
+        }
+
+        function submitPredefinedQuestion(questionText) {
+            const inputField = document.querySelector('.input-field input');
+            const sendButton = document.getElementById('send-button');
+
+            inputField.value = questionText;
+            const formData = new FormData();
+            formData.append('question', questionText);
+
+            // Show loading spinner in the button
+            sendButton.innerHTML = `<div class="loading-spinner"></div>`;
+            sendButton.disabled = true; // Disable the button to prevent multiple clicks
+
+            // Hide common questions
+            document.getElementById('common-questions').style.display = 'none';
+
             fetch('/ask', {
                 method: 'POST',
                 body: formData
             }).then(response => response.json())
                 .then(data => {
-                    const newContent = document.createElement('div');
-                    newContent.innerHTML = `
-                          <div class="message question">
-                              <p>${data.question}</p>
-                          </div>
-                          <div class="message answer">
-                              <p>${data.answer}</p>
-                          </div>`;
-                    document.getElementById('history').appendChild(newContent);
-                    document.querySelector('input[name="question"]').value = ''; // Clear the input field
-    
-                    // Ensure the new content is fully appended and then scroll the whole page
-                    setTimeout(function() {
-                        window.scrollTo(0, document.body.scrollHeight);
-                    }, 100);
+                    // Restore the button text
+                    sendButton.innerHTML = 'Send';
+                    sendButton.disabled = false; // Enable the button
+
+                    // Append the user's question
+                    const historyDiv = document.getElementById('history');
+                    let userDiv = document.createElement('div');
+                    userDiv.className = 'item right';
+                    userDiv.innerHTML = `<div class="msg"><p>${questionText}</p></div><div class="icon"><i class="fa fa-user"></i></div>`;
+                    historyDiv.prepend(userDiv);
+
+                    // Append the chatbot's answer
+                    let botDiv = document.createElement('div');
+                    botDiv.className = 'item left';
+                    botDiv.innerHTML = `<div class="icon" style="background: none;"><img src="{{ url_for('static', filename='proggylogo.svg') }}" alt="Proggy Logo" style="width: 40px; height: 40px;"></div><div class="msg"><p>${data.answer}</p></div>`;
+                    historyDiv.prepend(botDiv);
+
+                    // Clear the input field
+                    inputField.value = '';
                 });
         }
-    
-        document.addEventListener('DOMContentLoaded', function () {
-            const inputField = document.querySelector('input[type="text"]');
-            inputField.addEventListener('keydown', function (event) {
-                // Prevent form submission with Enter on mobile devices
-                if (window.innerWidth <= 600 && event.key === 'Enter') {
-                    event.preventDefault();
-                    submitQuestion(event); // Call the submit function directly
-                }
-            });
-        });
     </script>
 </body>
 </html>
