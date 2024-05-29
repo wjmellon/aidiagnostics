@@ -155,7 +155,13 @@
             flex-shrink: 0;
             position: relative; /* Ensure it stays at the bottom */
             bottom: env(safe-area-inset-bottom); /* Ensure safe area inset on iOS */
+
         }
+            @media (max-width: 600px) {
+        .typing-area {
+            padding-bottom: 3%; /* Set padding-bottom to 2% on mobile devices */
+        }
+    }
 
         .input-field {
             width: 100%;
