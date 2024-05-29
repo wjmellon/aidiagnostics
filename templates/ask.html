@@ -34,6 +34,7 @@
             display: flex;
             flex-direction: column;
             background: #f0f0f0;
+            padding-bottom: env(safe-area-inset-bottom); /* Ensure safe area inset on iOS */
         }
 
         .title {
@@ -152,6 +153,8 @@
             align-items: center;
             padding: 10px;
             flex-shrink: 0;
+            position: relative; /* Ensure it stays at the bottom */
+            bottom: env(safe-area-inset-bottom); /* Ensure safe area inset on iOS */
         }
 
         .input-field {
