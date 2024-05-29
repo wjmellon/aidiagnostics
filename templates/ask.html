@@ -272,6 +272,20 @@ body {
     100% { transform: rotate(360deg); }
 }
 
+  /* Landscape orientation adjustments for mobile devices */
+   @media (orientation: landscape) and (max-height: 600px) {
+       .title {
+           padding: 10px 0;  /* Reduce the padding */
+           font-size: 15px;  /* Optional: Reduce font size for better fit */
+           padding-left: 2%;
+       }
+
+       .title img {
+           height: 30px;  /* Reduce the logo size */
+       }
+   }
+
+
     </style>
     <title>proggy</title>
 </head>
