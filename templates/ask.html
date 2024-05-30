@@ -372,15 +372,7 @@ body {
             </div>
         </div>
         <div class="box" id="history">
-            <!-- This is where the chat will appear -->
-        </div>
-        <div class="common-questions" id="common-questions">
-            <img src="{{ url_for('static', filename='proggylogo.svg') }}" alt="Proggy Logo">
-            <div class="questions-container">
-                <button onclick="submitPredefinedQuestion('What is skin cancer?')">What is skin cancer?</button>
-                <button onclick="submitPredefinedQuestion('How do I prevent skin cancer?')">How do I prevent skin cancer?</button>
-                <button onclick="submitPredefinedQuestion('How do I know if I have skin cancer?')">How do I know if I have skin cancer?</button>
-            </div>
+            <!-- Chat content will appear here -->
         </div>
         <div class="typing-area">
             <div class="input-field">
@@ -406,18 +398,14 @@ body {
             const inputField = document.querySelector('.input-field input');
             const sendButton = document.getElementById('send-button');
             const portText = document.getElementById('selected-port-text').textContent.trim();
-            const port = (portText === 'Basic') ? '8081' : '8080'; // Corrected the port logic
+            const port = (portText === 'Basic') ? '8081' : '8080';
 
             inputField.value = questionText;
             const formData = new FormData();
             formData.append('question', questionText);
 
-            // Show loading spinner in the button
             sendButton.innerHTML = `<div class="loading-spinner"></div>`;
-            sendButton.disabled = true; // Disable the button to prevent multiple clicks
-
-            // Hide common questions
-            document.getElementById('common-questions').style.display = 'none';
+            sendButton.disabled = true;
 
             fetch('/ask', {
                 method: 'POST',
@@ -427,31 +415,27 @@ body {
                 }
             }).then(response => response.json())
                 .then(data => {
-                    // Restore the button text
                     sendButton.innerHTML = 'Send';
-                    sendButton.disabled = false; // Enable the button
+                    sendButton.disabled = false;
 
-                    // Append the user's question
                     const historyDiv = document.getElementById('history');
                     let userDiv = document.createElement('div');
                     userDiv.className = 'item right';
                     userDiv.innerHTML = `<div class="msg"><p>${questionText}</p></div><div class="icon"><i class="fa fa-user"></i></div>`;
                     historyDiv.prepend(userDiv);
 
-                    // Append the chatbot's answer
                     let botDiv = document.createElement('div');
                     botDiv.className = 'item left';
                     botDiv.innerHTML = `<div class="icon" style="background: none;"><img src="{{ url_for('static', filename='proggylogo.svg') }}" alt="Proggy Logo" style="width: 40px; height: 40px;"></div><div class="msg"><p>${data.answer}</p></div>`;
                     historyDiv.prepend(botDiv);
 
-                    // Clear the input field
                     inputField.value = '';
                 });
         }
 
         function changePort(port, text) {
             document.getElementById('selected-port-text').innerHTML = text;
-            document.querySelector('.dropdown').classList.remove('show'); // Hide dropdown after selection
+            toggleDropdown(); // This call ensures the dropdown is closed after selection
             console.log('Port updated to', port, '(', text.trim(), ')');
         }
 
@@ -459,7 +443,6 @@ body {
             document.querySelector('.dropdown').classList.toggle('show');
         }
 
-        // Close the dropdown if the user clicks outside of it
         window.onclick = function(event) {
             if (!event.target.matches('.dropbtn')) {
                 var dropdowns = document.getElementsByClassName("dropdown");
