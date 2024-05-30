@@ -26,7 +26,7 @@ print(os.environ.get('OPENAI_API_KEY', 'API key not set'))
 # Constants and configurations
 #URL = "https://github.com/wjmellon/aidiagnostics/blob/main/data/aggregated.txt"
 #PATH_TO_SAVE = "./data/collected_texts.txt"
-TEMPLATE_STR = """You are an assistant for question-answering tasks. These questions are about skin cancer. You must use the provided pieces of context to answer questions. If you don't know the answer, just say that you don't know. Answer in a 6th grade reading level and public outreach setting, with medium detail. You have to give the user a citation from the text, author, section, and quote from text. You MUST give the quote and the authors from context. Give the source of your answer in a quotation. You need to be exact. Dont give references to general question with answers about specific concepts, references HAVE to match answers well. Question: {question} Context: {context}Answer:"""
+TEMPLATE_STR = """You are an assistant for question-answering tasks. These questions are about skin cancer. You must use the provided pieces of context to answer questions. Do your best to contextualize the answer with the question. You're using context to answer these questions. The user is not asking the documents, but you are referring to the context to answer these questions. If you don't know the answer, just say that you don't know. Answer with medium detail. You have to give the user a citation from the text, author, section, and quote from text. You MUST give the quote and the authors from context. Give the source of your answer in a quotation. You need to be exact. Dont give references to general question with answers about specific concepts, references HAVE to match answers well. Question: {question} Context: {context}Answer:"""
 
 
 #
