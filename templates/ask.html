@@ -329,32 +329,30 @@ body {
     100% { transform: rotate(360deg); }
 }
 
-  /* Landscape orientation adjustments for mobile devices */
-   @media (orientation: landscape) and (max-height: 600px) {
-       .title {
-           padding: 10px 0;  /* Reduce the padding */
-           font-size: 15px;  /* Optional: Reduce font size for better fit */
-       }
+/* Landscape orientation adjustments for mobile devices */
+@media (orientation: landscape) and (max-height: 600px) {
+    .title {
+        padding: 10px 0;  /* Reduce the padding */
+        font-size: 15px;  /* Optional: Reduce font size for better fit */
+    }
 
-       .title img {
-           height: 30px;  /* Reduce the logo size */
-       }
-   }
+    .title img {
+        height: 30px;  /* Reduce the logo size */
+    }
+}
 
-   /* Ensure dropdown stays below the button on mobile */
-   @media (max-width: 600px) {
-       .dropdown-content {
-           right: 0; /* Reset right alignment */
+/* Ensure dropdown stays below the button on mobile */
+@media (max-width: 600px) {
+    .dropdown-content {
+        right: 0; /* Reset right alignment */
+        top: 100%; /* Position below the dropdown button */
+    }
+}
 
-           top: 100%; /* Position below the dropdown button */
-       }
-   }
-
-   /* Show dropdown on mobile when button is clicked */
-   .dropdown.show .dropdown-content {
-       display: block;
-   }
-
+/* Show dropdown on mobile when button is clicked */
+.dropdown.show .dropdown-content {
+    display: block;
+}
     </style>
     <title>proggy</title>
 </head>
@@ -368,8 +366,8 @@ body {
             <div class="dropdown">
                 <button class="dropbtn" onclick="toggleDropdown()"><span id="selected-port-text">Basic&nbsp;</span> <i class="fa fa-caret-down"></i></button>
                 <div class="dropdown-content">
-                    <a href="#" onclick="changePort('8080', 'Basic&nbsp;')">Basic&nbsp;</a>
-                    <a href="#" onclick="changePort('8081', 'Advanced&nbsp;')">Advanced&nbsp;</a>
+                    <a href="#" onclick="changePort('8081', 'Basic&nbsp;')">Basic&nbsp;</a>
+                    <a href="#" onclick="changePort('8080', 'Advanced&nbsp;')">Advanced&nbsp;</a>
                 </div>
             </div>
         </div>
@@ -408,7 +406,7 @@ body {
             const inputField = document.querySelector('.input-field input');
             const sendButton = document.getElementById('send-button');
             const portText = document.getElementById('selected-port-text').textContent.trim();
-            const port = (portText === 'Basic') ? '8080' : '8081';
+            const port = (portText === 'Basic') ? '8081' : '8080'; // Corrected the port logic
 
             inputField.value = questionText;
             const formData = new FormData();
