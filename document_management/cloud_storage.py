@@ -1,60 +1,53 @@
-from pymed import PubMed
-import weaviate
-import json
-from datetime import datetime
 import os
+import weaviate
+import requests
+import pdfplumber
+from unpywall import Unpywall
+import io
+
+# Set up Unpaywall credentials
+os.environ['UNPAYWALL_EMAIL'] = 'wmellon@asu.edu'  # Replace with your email
+
+from pdfminer.pdfparser import PDFSyntaxError
 
 
-def fetch_from_pubmed(search_term, max_results=500):
-    """Fetches top cited and relevant scientific papers related to a query from the PubMed API."""
-    pubmed = PubMed(tool="PubMedSearcher", email="myemail@ccc.com")
-    # Calculate the year for 15 years ago
-    current_year = datetime.now().year
-    year_15_years_ago = current_year - 15
-    # The date filter is added to the query string.
-    query = f"{search_term} AND (cancer[MeSH Terms] OR melanoma[MeSH Terms])"
-    results = pubmed.query(query, max_results=max_results)
-    articles = []
+def download_and_extract_text(url):
+    """Downloads a PDF from a given URL and extracts text from it. Handles errors more robustly."""
+    if not url:
+        print("No URL provided for download.")
+        return None
 
-    for article in results:
-        articleDict = article.toDict()
-        pub_date = articleDict.get('pub_date', '')
-        if pub_date:
-            pub_year = int(pub_date[:4])
-            if pub_year < year_15_years_ago:
-                continue
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Raises HTTPError for bad responses (4xx or 5xx)
 
-        authors_list = [author['lastname'] + ', ' + author['forename'] for author in articleDict.get('authors', []) if
-                        'lastname' in author and 'forename' in author]
-        articles.append({
-            'title': articleDict.get('title', 'No title provided'),
-            'abstract': articleDict.get('abstract', 'No abstract provided'),
-            'authors': authors_list,
-            'pubmed_id': articleDict.get('pubmed_id', '').partition('\n')[0],
-            'pub_date': pub_date
-        })
+        # Use a context manager to ensure the file is handled properly
+        with pdfplumber.open(io.BytesIO(response.content)) as pdf:
+            full_text = ''
+            for page in pdf.pages:
+                full_text += page.extract_text() or ''
+            return full_text
+    except requests.RequestException as e:
+        print(f"Failed to download the PDF: {e}")
+        return None
+    except PDFSyntaxError:
+        print("Not a valid PDF file.")
+        return None
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        return None
 
-    # Sort the articles by relevance or any other criteria if needed
-    # Here, we assume that the results from PubMed are already sorted by relevance
-    return articles
-
-
-def chunk_text(title, text, chunk_size=150, overlap_size=25):
-    """Prepends the title to the text and chunks the combined text into smaller parts with overlapping segments."""
-    full_text = f"Title: {title}. {text}"
-    words = full_text.split()
-    chunks = []
-    for i in range(0, len(words), chunk_size - overlap_size):
-        chunk = " ".join(words[i:i + chunk_size])
-        chunks.append(chunk)
-    return chunks
-
+def search_unpaywall(query_term):
+    """Searches articles by text query using Unpaywall and extracts required DOIs."""
+    results = Unpywall.query(query=query_term, is_oa=True)
+    dois = results['doi'].tolist()
+    return dois
 
 def initialize_weaviate():
     """Initializes the Weaviate client and configures the schema."""
     client = weaviate.Client(
-        url=f"http://localhost:8080",  # Dynamically set the port
-        additional_headers={"X-OpenAI-Api-Key": os.getenv('OPENAI_API_KEY')}
+        url=f"http://localhost:8080",
+        additional_headers={"X-OpenAI-Api-Key": os.getenv('OPENAI_API_KEY')}  # Replace with your actual API key
     )
     try:
         client.schema.delete_all()
@@ -73,28 +66,44 @@ def initialize_weaviate():
         print(f"Failed to manage schema in Weaviate: {e}")
     return client
 
+def chunk_text(text, chunk_size=150, overlap_size=25):
+    """Chunks text into smaller parts with overlapping segments."""
+    words = text.split()
+    chunks = []
+    for i in range(0, len(words), chunk_size - overlap_size):
+        chunk = " ".join(words[i:i + chunk_size])
+        chunks.append(chunk)
+    return chunks
 
-def load_into_weaviate(articles, client):
+def load_into_weaviate(dois, client):
+    """Loads detailed article data into Weaviate from a list of DOIs."""
     client.batch.configure(batch_size=100)
     with client.batch as batch:
-        for article in articles:
-            chunks = chunk_text(article['title'], article['abstract'])
-            for i, chunk in enumerate(chunks):
+        for doi in dois:
+            article_data = Unpywall.get_json(doi)
+            title = article_data.get('title', 'No title provided')
+            authors = [author['family'] for author in article_data.get('authors', []) if 'family' in author]
+            pdf_link = Unpywall.get_pdf_link(doi)
+            full_text = download_and_extract_text(pdf_link)
+            if not full_text:
+                print(f"No text available for DOI: {doi}")
+                continue  # Skip this entry if no text could be extracted
+            text_chunks = chunk_text(full_text)
+            for index, chunk in enumerate(text_chunks):
                 batch.add_data_object(
                     data_object={
-                        "title": article['title'],
-                        "authors": article['authors'],  # Now passing authors as a list
+                        "title": title,
+                        "authors": authors,
                         "text": chunk,
-                        "index": i,
-                        "pubmed_id": article['pubmed_id']
+                        "index": index
                     },
                     class_name="DocumentChunk"
                 )
 
 
 if __name__ == "__main__":
-    search_term = "skin cancer"
-    articles = fetch_from_pubmed(search_term)
+    query_term = "skin cancer"
+    dois = search_unpaywall(query_term)
     weaviate_client = initialize_weaviate()
-    load_into_weaviate(articles, weaviate_client)
-    print("All chunks have been uploaded to Weaviate.")
+    load_into_weaviate(dois, weaviate_client)
+    print("All articles have been uploaded to Weaviate.")
