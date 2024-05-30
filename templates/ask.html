@@ -44,24 +44,34 @@ body {
     background: linear-gradient(90deg, #51989E, #3F7277);
     color: white;
     line-height: 2.5;
-    text-align: center;
     font-size: 24px;
-    padding: 20px 0;
+    padding: 20px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     position: sticky;
     top: 0;
     z-index: 1000;
     display: flex;
     align-items: center;
-    justify-content: left;
-    padding-left: 2%;
+    justify-content: space-between; /* Add this line to space items correctly */
 }
 
 @media (max-width: 600px) {
     .title {
-        padding-left: 0%;
-        justify-content: center;
-        padding: 10px 0;
+        padding: 10px;
+    }
+
+    .title > div {
+        display: flex;
+        align-items: center;
+    }
+
+    .title > div:first-child {
+        flex: 1;
+        justify-content: flex-start;
+    }
+
+    .title > div:last-child {
+        justify-content: flex-end;
     }
 }
 
@@ -70,12 +80,59 @@ body {
     margin-right: 10px;
 }
 
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropbtn {
+    font-family: 'Poppins', sans-serif;
+    background-color: transparent;
+    color: #efefef;
+    padding: 10px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+    border-radius: 5px;
+    right: 0; /* Align the dropdown content to the right */
+}
+
+.dropdown-content a {
+    font-size: 15px;
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown-content a:hover {
+    background-color: #f1f1f1;
+    border-radius: 5px;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
 .box {
     flex-grow: 1;
     overflow-y: auto; /* Allows for scrolling only when necessary */
     padding: 20px 10px; /* Updated padding */
     display: flex;
     flex-direction: column-reverse;
+    position: relative;
 }
 
 .item {
@@ -277,7 +334,6 @@ body {
        .title {
            padding: 10px 0;  /* Reduce the padding */
            font-size: 15px;  /* Optional: Reduce font size for better fit */
-           padding-left: 2%;
        }
 
        .title img {
@@ -285,6 +341,19 @@ body {
        }
    }
 
+   /* Ensure dropdown stays below the button on mobile */
+   @media (max-width: 600px) {
+       .dropdown-content {
+           right: 0; /* Reset right alignment */
+
+           top: 100%; /* Position below the dropdown button */
+       }
+   }
+
+   /* Show dropdown on mobile when button is clicked */
+   .dropdown.show .dropdown-content {
+       display: block;
+   }
 
     </style>
     <title>proggy</title>
@@ -292,8 +361,20 @@ body {
 <body>
     <div class="wrapper">
         <div class="title">
-            <img src="{{ url_for('static', filename='proggynocolor.svg') }}" alt="Proggy Logo">
-            proggy
+            <div style="display: flex; align-items: center;">
+                <img src="{{ url_for('static', filename='proggynocolor.svg') }}" alt="Proggy Logo">
+                <span>proggy</span>
+            </div>
+            <div class="dropdown">
+                <button class="dropbtn" onclick="toggleDropdown()"><span id="selected-port-text">Basic&nbsp;</span> <i class="fa fa-caret-down"></i></button>
+                <div class="dropdown-content">
+                    <a href="#" onclick="changePort('8080', 'Basic&nbsp;')">Basic&nbsp;</a>
+                    <a href="#" onclick="changePort('8081', 'Advanced&nbsp;')">Advanced&nbsp;</a>
+                </div>
+            </div>
+        </div>
+        <div class="box" id="history">
+            <!-- This is where the chat will appear -->
         </div>
         <div class="common-questions" id="common-questions">
             <img src="{{ url_for('static', filename='proggylogo.svg') }}" alt="Proggy Logo">
@@ -302,9 +383,6 @@ body {
                 <button onclick="submitPredefinedQuestion('How do I prevent skin cancer?')">How do I prevent skin cancer?</button>
                 <button onclick="submitPredefinedQuestion('How do I know if I have skin cancer?')">How do I know if I have skin cancer?</button>
             </div>
-        </div>
-        <div class="box" id="history">
-            <!-- This is where the chat will appear -->
         </div>
         <div class="typing-area">
             <div class="input-field">
@@ -329,6 +407,8 @@ body {
         function submitPredefinedQuestion(questionText) {
             const inputField = document.querySelector('.input-field input');
             const sendButton = document.getElementById('send-button');
+            const portText = document.getElementById('selected-port-text').textContent.trim();
+            const port = (portText === 'Basic') ? '8080' : '8081';
 
             inputField.value = questionText;
             const formData = new FormData();
@@ -343,7 +423,10 @@ body {
 
             fetch('/ask', {
                 method: 'POST',
-                body: formData
+                body: formData,
+                headers: {
+                    'Database-Port': port
+                }
             }).then(response => response.json())
                 .then(data => {
                     // Restore the button text
@@ -366,6 +449,29 @@ body {
                     // Clear the input field
                     inputField.value = '';
                 });
+        }
+
+        function changePort(port, text) {
+            document.getElementById('selected-port-text').innerHTML = text;
+            document.querySelector('.dropdown').classList.remove('show'); // Hide dropdown after selection
+            console.log('Port updated to', port, '(', text.trim(), ')');
+        }
+
+        function toggleDropdown() {
+            document.querySelector('.dropdown').classList.toggle('show');
+        }
+
+        // Close the dropdown if the user clicks outside of it
+        window.onclick = function(event) {
+            if (!event.target.matches('.dropbtn')) {
+                var dropdowns = document.getElementsByClassName("dropdown");
+                for (var i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+            }
         }
     </script>
 </body>

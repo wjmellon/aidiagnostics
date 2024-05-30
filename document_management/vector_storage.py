@@ -58,17 +58,17 @@ def initialize_vectorstore(chunks):
 #test_query = client.query.get('Chunk', properties=['text', 'index', 'document']).do()
 #print(test_query)
 
-def initialize_cloud_retriever():
+def initialize_cloud_retriever(port="8080"):
     client = weaviate.Client(
-        url="http://localhost:8080",  # Ensure this is your correct cloud instance URL
+        url=f"http://localhost:{port}",  # Dynamically set the port
         additional_headers={"X-OpenAI-Api-Key": os.getenv('OPENAI_API_KEY')}
     )
 
     # Initialize the vector store with the correct index and text key
     vectorstore = Weaviate(
         client=client,
-        index_name="DocumentChunk",  # Replace with your actual class name in Weaviate
-        text_key="text"  # Replace with the property name that contains the main text data
+        index_name="DocumentChunk",  # Ensure this matches your class name in Weaviate
+        text_key="text"  # This should be the field that contains the main text data
     )
 
     return vectorstore.as_retriever()

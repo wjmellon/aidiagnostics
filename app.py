@@ -42,9 +42,9 @@ TEMPLATE_STR = """You are an assistant for question-answering tasks. These quest
 # download_document(URL, PATH_TO_SAVE)
 #chunks = load_and_chunk_document(PATH_TO_SAVE)
 #chunks = split_text(PATH_TO_SAVE,100)
-retriever = initialize_cloud_retriever()
-prompt = setup_prompt(TEMPLATE_STR)
-rag_chain = build_rag_chain(retriever, prompt)
+# retriever = initialize_cloud_retriever()
+# prompt = setup_prompt(TEMPLATE_STR)
+# rag_chain = build_rag_chain(retriever, prompt)
 
 
 
@@ -64,6 +64,10 @@ rag_chain = build_rag_chain(retriever, prompt)
 
 @app.route('/ask', methods=['POST'])
 def ask_question():
+    port = request.headers.get('Database-Port', '8080')
+    retriever = initialize_cloud_retriever(port)
+    prompt = setup_prompt(TEMPLATE_STR)
+    rag_chain = build_rag_chain(retriever, prompt)
     question = request.form['question']
     if question:
         # Use your rag_chain to get the response
