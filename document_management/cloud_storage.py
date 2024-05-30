@@ -10,25 +10,35 @@ os.environ['UNPAYWALL_EMAIL'] = 'wmellon@asu.edu'  # Replace with your email
 
 from pdfminer.pdfparser import PDFSyntaxError
 
+import requests
+import io
+import pdfplumber
+from pdfminer.pdfparser import PDFSyntaxError
 
 def download_and_extract_text(url):
-    """Downloads a PDF from a given URL and extracts text from it. Handles errors more robustly."""
+    """Downloads a PDF from a given URL and extracts text from it, including a User-Agent header."""
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+    }
+
     if not url:
         print("No URL provided for download.")
         return None
 
     try:
-        response = requests.get(url)
+        response = requests.get(url, headers=headers)
         response.raise_for_status()  # Raises HTTPError for bad responses (4xx or 5xx)
 
-        # Use a context manager to ensure the file is handled properly
         with pdfplumber.open(io.BytesIO(response.content)) as pdf:
             full_text = ''
             for page in pdf.pages:
                 full_text += page.extract_text() or ''
             return full_text
+    except requests.exceptions.HTTPError as e:
+        print(f"HTTP error occurred: {e}")  # Specific HTTP error
+        return None
     except requests.RequestException as e:
-        print(f"Failed to download the PDF: {e}")
+        print(f"Failed to download the PDF: {e}")  # General Request errors
         return None
     except PDFSyntaxError:
         print("Not a valid PDF file.")
