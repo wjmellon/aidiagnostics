@@ -64,7 +64,7 @@ TEMPLATE_STR = """You are an assistant for question-answering tasks. These quest
 
 @app.route('/ask', methods=['POST'])
 def ask_question():
-    port = request.headers.get('Database-Port', '8080')
+    port = request.headers.get('Database-Port', '8081')
     retriever = initialize_cloud_retriever(port)
     prompt = setup_prompt(TEMPLATE_STR)
     rag_chain = build_rag_chain(retriever, prompt)
