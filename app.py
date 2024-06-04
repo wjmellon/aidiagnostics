@@ -93,16 +93,16 @@ def ask_question():
         # Use your rag_chain to get the response
         collection_name = "DocumentChunk"
 
-        grouped_task = f"Given the information below, answer the question: '{question}'. Do your best to provide an accurate and concise answer. If the information does not directly answer the question, indicate that no relevant information is available. Always include quotes, author names, and titles from the context for references."
+        grouped_task = f"Given the information below, answer the question: '{question}'. Do your best to provide an accurate and concise answer. If the information does not directly answer the question, indicate that no relevant information is available. Always include quotes, author names, and titles from the context for references. Format as citation, author and quote. Answer with medium detail. Sometimes too much information can be given. Choose the most relevant information from the context "
         response = (
             client.query
             .get(class_name=collection_name, properties=["text", "title", "authors", "index"])
             .with_near_text({"concepts": [question]})
-            .with_limit(10)
+            .with_limit(5)
             .with_generate(grouped_task=grouped_task)
             .do()
         )
-        print(response)
+        #print(response)
 
         #response["data"]["Get"][collection_name][0]["_additional"]["generate"]["groupedResult"]
         #Return question and answer in JSON format
