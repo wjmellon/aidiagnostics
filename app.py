@@ -62,49 +62,52 @@ TEMPLATE_STR = """You are an assistant for question-answering tasks. These quest
 #     # For GET requests or if question is empty, render template without response
 #     return render_template('ask.html')
 
+# @app.route('/ask', methods=['POST'])
+# def ask_question():
+#     port = request.headers.get('Database-Port', '8081')
+#     retriever = initialize_cloud_retriever(port)
+#     prompt = setup_prompt(TEMPLATE_STR)
+#     rag_chain = build_rag_chain(retriever, prompt)
+#     question = request.form['question']
+#     if question:
+#         # Use your rag_chain to get the response
+#         response = rag_chain.invoke(question)
+#         #Return question and answer in JSON format
+#         return jsonify(question=question, answer=response)
+#     return jsonify(error="No question provided"), 400
+
+
 @app.route('/ask', methods=['POST'])
 def ask_question():
+
     port = request.headers.get('Database-Port', '8081')
+    client = weaviate.Client(
+        url=f"http://localhost:{port}",  # Dynamically set the port
+        additional_headers={"X-OpenAI-Api-Key": os.getenv('OPENAI_API_KEY')}
+    )
     retriever = initialize_cloud_retriever(port)
     prompt = setup_prompt(TEMPLATE_STR)
     rag_chain = build_rag_chain(retriever, prompt)
     question = request.form['question']
     if question:
         # Use your rag_chain to get the response
-        response = rag_chain.invoke(question)
+        collection_name = "DocumentChunk"
+
+        grouped_task = f"Given the information below, answer the question: '{question}'. Do your best to provide an accurate and concise answer. If the information does not directly answer the question, indicate that no relevant information is available. Always include quotes, author names, and titles from the context for references."
+        response = (
+            client.query
+            .get(class_name=collection_name, properties=["text", "title", "authors", "index"])
+            .with_near_text({"concepts": [question]})
+            .with_limit(10)
+            .with_generate(grouped_task=grouped_task)
+            .do()
+        )
+        print(response)
+
+        #response["data"]["Get"][collection_name][0]["_additional"]["generate"]["groupedResult"]
         #Return question and answer in JSON format
-        return jsonify(question=question, answer=response)
+        return jsonify(question=question, answer=response["data"]["Get"][collection_name][0]["_additional"]["generate"]["groupedResult"])
     return jsonify(error="No question provided"), 400
-
-# @app.route('/ask', methods=['POST'])
-# def ask_question():
-#     question = request.form['question']
-#     if question:
-#         try:
-#             # Use your rag_chain to get the response
-#             response = (
-#                 client.query
-#                 .get("DocumentChunk", ['title', 'authors', 'text'])
-#                 .with_near_text({"concepts": [question]})
-#                 .with_generate(
-#                     grouped_task="Answer the question using the text. Try to keep it brief. Quote the most important parts of text after answer. Only report on stuff you know about and that is relevant to the question. You MUST provide quotes that are relevant. {authors} {title}"
-#                 )
-#                 .with_limit(20)
-#                 .do()
-#             )
-#
-#             # Convert response to a string
-#             response_str = str(response)
-#
-#             # Print and return the response as a string
-#             print(response_str)
-#             return jsonify(question=question, answer=response_str)
-#         except Exception as e:
-#             # Generic exception handling
-#             return jsonify(error=str(e)), 500
-#     return jsonify(error="No question provided"), 400
-
-
 
 
 if __name__ == '__main__':
