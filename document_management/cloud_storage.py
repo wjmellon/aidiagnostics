@@ -6,6 +6,7 @@ import pdfplumber
 import weaviate
 from bs4 import BeautifulSoup
 from pdfminer.pdfparser import PDFSyntaxError
+import time
 
 def ensure_doi_url(doi):
     """Ensure that the DOI is formatted as a full URL."""
@@ -23,6 +24,26 @@ def query_unpaywall(query_terms, email):
         term_dois = [result['response']['doi'] for result in results['results']]
         dois.extend(term_dois)
     return dois
+def get_document_details(doi, email):
+    """Retrieve document details including PDF URL, title, and authors."""
+    doi_url = ensure_doi_url(doi)
+    url = f"https://api.unpaywall.org/v2/{doi_url}?email={email}"
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36'
+    }
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    data = response.json()
+    pdf_url = data.get('best_oa_location', {}).get('url_for_pdf', '')
+    landing_page_url = data.get('best_oa_location', {}).get('url_for_landing_page', '')
+    title = data.get('title', 'Unknown Title')
+
+    # Correctly handle z_authors being None
+    z_authors = data.get('z_authors') or []
+    authors = [f"{author.get('given', '')} {author.get('family', '')}".strip() for author in z_authors if author.get('given') or author.get('family')]
+
+    return (pdf_url if pdf_url else landing_page_url, title, authors)
+
 
 def get_pdf_url(doi, email):
     """Retrieve the PDF or landing page URL for a DOI from Unpaywall API."""
@@ -86,18 +107,35 @@ def scrape_and_clean_text(content):
         print(f"Failed to scrape or clean HTML: {e}")
         return None
 
-def chunk_text(source_text, chunk_size=200, overlap_size=30):
-    """Splits the text into smaller chunks."""
+
+import tiktoken
+
+
+def chunk_text(source_text, chunk_size=200, overlap_size=50):
+    """Splits the text into smaller chunks ensuring each chunk stays within the token limit."""
+    encoding = tiktoken.get_encoding("cl100k_base")  # Use the encoding used by the OpenAI model
+
     words = source_text.split()
     chunks = []
     for i in range(0, len(words), chunk_size - overlap_size):
-        chunk = " ".join(words[i:i + chunk_size])
+        chunk_words = words[i:i + chunk_size]
+        chunk = " ".join(chunk_words)
+        token_count = len(encoding.encode(chunk))
+
+        # Adjust the chunk size to stay within the token limit
+        while token_count > 6000:
+            chunk_size -= 500
+            chunk_words = words[i:i + chunk_size]
+            chunk = " ".join(chunk_words)
+            token_count = len(encoding.encode(chunk))
+
         chunks.append(chunk)
     return chunks
 
+
 def initialize_weaviate():
     """Initializes the Weaviate client and configures the schema."""
-    client = weaviate.Client(url="http://localhost:8080", additional_headers={"X-OpenAI-Api-Key": os.getenv("OPENAI_API_KEY")})
+    client = weaviate.Client(url="http://localhost:8080", additional_headers={"X-OpenAI-Api-Key": os.getenv(("OPENAI_API_KEY"))})
     client.schema.delete_all()
     chunk_class = {
         "class": "DocumentChunk",
@@ -116,34 +154,51 @@ def initialize_weaviate():
     client.schema.create_class(chunk_class)
     return client
 
+
 def upload_chunks_to_weaviate(client, text_chunks, title, authors, doi_url):
     """Uploads text chunks to Weaviate."""
-    client.batch.configure(batch_size=100)
-    with client.batch as batch:
-        for index, chunk in enumerate(text_chunks):
-            batch.add_data_object(
-                data_object={
-                    "title": title,
-                    "authors": authors,
-                    "text": chunk,
-                    "index": index,
-                    "doi_url": doi_url
-                },
-                class_name="DocumentChunk"
-            )
-        batch.flush()
+    batch_size = 20  # Reduce the batch size from 100 to 20
+    retries = 3  # Number of retries for each batch
+    retry_delay = 2  # Initial delay between retries in seconds
+
+    client.batch.configure(batch_size=batch_size)
+
+    for attempt in range(1, retries + 1):
+        try:
+            with client.batch as batch:
+                for index, chunk in enumerate(text_chunks):
+                    batch.add_data_object(
+                        data_object={
+                            "title": title,
+                            "authors": authors,
+                            "text": chunk,
+                            "index": index,
+                            "doi_url": doi_url
+                        },
+                        class_name="DocumentChunk"
+                    )
+                batch.flush()
+            break  # Break out of the retry loop if successful
+        except requests.exceptions.ReadTimeout:
+            if attempt < retries:
+                print(
+                    f"[ERROR] Batch ReadTimeout Exception occurred! Retrying in {retry_delay * attempt}s. [{attempt}/{retries}]")
+                time.sleep(retry_delay * attempt)  # Exponential backoff
+            else:
+                print("[ERROR] Batch ReadTimeout Exception occurred! No more retries left.")
+                raise
+
 
 if __name__ == "__main__":
     email = 'wmellon@asu.edu'  # Replace with your actual email
-    query_terms = ["skin cancer", "melanoma", "skin cancer case study", "rare skin cancers", "skin cancer demographics", "carcinoma", "top skin cancers", "skin cancer prognosis"]
+    query_terms = ["skin cancer", "melanoma", "skin cancer case study", "rare skin cancers", "skin cancer demographics", "carcinoma", "top skin cancers", "skin cancer prognosis", "skin cancer by race"]
     weaviate_client = initialize_weaviate()
     dois = query_unpaywall(query_terms, email)
     for doi in dois:
-        doi_url = ensure_doi_url(doi)
-        url = get_pdf_url(doi, email)
+        url, title, authors = get_document_details(doi, email)
         full_text = download_and_extract_text(url)
         if full_text:
             text_chunks = chunk_text(full_text)
-            upload_chunks_to_weaviate(weaviate_client, text_chunks, "Extracted from PDF or Webpage", ["Unknown"], doi_url)
+            upload_chunks_to_weaviate(weaviate_client, text_chunks, title, authors, url)
         else:
             print(f"No text available for DOI: {doi}")
