@@ -15,7 +15,8 @@ def query_unpaywall(query_terms, email):
     """Query the Unpaywall API for multiple search terms and collect DOIs."""
     dois = []
     for query_term in query_terms:
-        url = f"https://api.unpaywall.org/v2/search/?query={query_term}&email={email}&is_oa=true"
+        formatted_query = query_term.replace(" ", "%20")
+        url = f"https://api.unpaywall.org/v2/search/?query={formatted_query}&email={email}&is_oa=true"
         response = requests.get(url)
         response.raise_for_status()
         results = response.json()
