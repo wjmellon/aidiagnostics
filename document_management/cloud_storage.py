@@ -110,7 +110,6 @@ def scrape_and_clean_text(content):
 
 import tiktoken
 
-
 def chunk_text(source_text, max_tokens=6000, chunk_size=200, overlap_size=50):
     """Splits the text into smaller chunks ensuring each chunk stays within the token limit."""
     encoding = tiktoken.get_encoding("cl100k_base")  # Use the encoding used by the OpenAI model
@@ -129,7 +128,10 @@ def chunk_text(source_text, max_tokens=6000, chunk_size=200, overlap_size=50):
             chunk = " ".join(words[start:end])
             token_count = len(encoding.encode(chunk))
 
-        chunks.append(chunk)
+        if token_count > 0:  # Ensure we are adding valid chunks
+            chunks.append(chunk)
+            print(f"Chunk size: {token_count} tokens")  # Debug output to monitor token sizes
+
         start = end - overlap_size  # Move to the next chunk with overlap
 
     return chunks
