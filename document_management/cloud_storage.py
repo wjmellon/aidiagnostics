@@ -1,5 +1,5 @@
 import os
-
+import logging
 import requests
 import io
 import pdfplumber
@@ -111,25 +111,27 @@ def scrape_and_clean_text(content):
 import tiktoken
 
 
-def chunk_text(source_text, chunk_size=200, overlap_size=50):
+def chunk_text(source_text, max_tokens=6000, chunk_size=200, overlap_size=50):
     """Splits the text into smaller chunks ensuring each chunk stays within the token limit."""
     encoding = tiktoken.get_encoding("cl100k_base")  # Use the encoding used by the OpenAI model
 
     words = source_text.split()
     chunks = []
-    for i in range(0, len(words), chunk_size - overlap_size):
-        chunk_words = words[i:i + chunk_size]
-        chunk = " ".join(chunk_words)
+    start = 0
+
+    while start < len(words):
+        end = start + chunk_size
+        chunk = " ".join(words[start:end])
         token_count = len(encoding.encode(chunk))
 
-        # Adjust the chunk size to stay within the token limit
-        while token_count > 6000:
-            chunk_size -= 500
-            chunk_words = words[i:i + chunk_size]
-            chunk = " ".join(chunk_words)
+        while token_count > max_tokens:
+            end -= 10  # Reduce the chunk size incrementally
+            chunk = " ".join(words[start:end])
             token_count = len(encoding.encode(chunk))
 
         chunks.append(chunk)
+        start = end - overlap_size  # Move to the next chunk with overlap
+
     return chunks
 
 
@@ -155,11 +157,13 @@ def initialize_weaviate():
     return client
 
 
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 def upload_chunks_to_weaviate(client, text_chunks, title, authors, doi_url):
     """Uploads text chunks to Weaviate."""
-    batch_size = 20  # Reduce the batch size from 100 to 20
-    retries = 3  # Number of retries for each batch
-    retry_delay = 2  # Initial delay between retries in seconds
+    batch_size = 20
+    retries = 3
+    retry_delay = 2
 
     client.batch.configure(batch_size=batch_size)
 
@@ -178,20 +182,30 @@ def upload_chunks_to_weaviate(client, text_chunks, title, authors, doi_url):
                         class_name="DocumentChunk"
                     )
                 batch.flush()
-            break  # Break out of the retry loop if successful
+            logging.info(f"Successfully uploaded {len(text_chunks)} chunks for DOI {doi_url}")
+            break
         except requests.exceptions.ReadTimeout:
             if attempt < retries:
-                print(
-                    f"[ERROR] Batch ReadTimeout Exception occurred! Retrying in {retry_delay * attempt}s. [{attempt}/{retries}]")
-                time.sleep(retry_delay * attempt)  # Exponential backoff
+                logging.warning(f"[ERROR] Batch ReadTimeout Exception occurred! Retrying in {retry_delay * attempt}s. [{attempt}/{retries}]")
+                time.sleep(retry_delay * attempt)
             else:
-                print("[ERROR] Batch ReadTimeout Exception occurred! No more retries left.")
+                logging.error("[ERROR] Batch ReadTimeout Exception occurred! No more retries left.")
                 raise
-
 
 if __name__ == "__main__":
     email = 'wmellon@asu.edu'  # Replace with your actual email
-    query_terms = ["skin cancer", "melanoma", "skin cancer case study", "rare skin cancers", "skin cancer demographics", "carcinoma", "top skin cancers", "skin cancer prognosis", "skin cancer by race"]
+    query_terms = [
+        "skin cancer", "melanoma", "skin cancer case study", "rare skin cancers",
+        "skin cancer demographics", "carcinoma", "top skin cancers", "skin cancer prognosis",
+        "skin cancer by race", "skin cancer treatment", "clinical skin oncology",
+        "clinical oncology", "UV radiation and skin cancer", "skin cancer diagnosis",
+        "basal cell carcinoma", "pediatric skin cancer", "skin cancer clinical prevention",
+        "skin cancer case reports", "skin cancer epidemiology", "personalized skin cancer therapy",
+        "skin cancer metastasis", "skin cancer risk factors", "Basal Cell Carcinoma (BCC)",
+        "Squamous Cell Carcinoma (SCC)", "Melanoma", "Merkel Cell Carcinoma",
+        "Cutaneous Lymphoma", "Kaposi Sarcoma", "Actinic Keratosis",
+        "Dermatofibrosarcoma Protuberans (DFSP)", "Sebaceous Carcinoma", "Atypical Fibroxanthoma"
+    ]
     weaviate_client = initialize_weaviate()
     dois = query_unpaywall(query_terms, email)
     for doi in dois:

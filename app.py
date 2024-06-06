@@ -62,52 +62,52 @@ TEMPLATE_STR = """You are an assistant for question-answering tasks. These quest
 #     # For GET requests or if question is empty, render template without response
 #     return render_template('ask.html')
 
-# @app.route('/ask', methods=['POST'])
-# def ask_question():
-#     port = request.headers.get('Database-Port', '8081')
-#     retriever = initialize_cloud_retriever(port)
-#     prompt = setup_prompt(TEMPLATE_STR)
-#     rag_chain = build_rag_chain(retriever, prompt)
-#     question = request.form['question']
-#     if question:
-#         # Use your rag_chain to get the response
-#         response = rag_chain.invoke(question)
-#         #Return question and answer in JSON format
-#         return jsonify(question=question, answer=response)
-#     return jsonify(error="No question provided"), 400
-
-
 @app.route('/ask', methods=['POST'])
 def ask_question():
-
     port = request.headers.get('Database-Port', '8081')
-    client = weaviate.Client(
-        url=f"http://localhost:{port}",  # Dynamically set the port
-        additional_headers={"X-OpenAI-Api-Key": os.getenv('OPENAI_API_KEY')}
-    )
     retriever = initialize_cloud_retriever(port)
     prompt = setup_prompt(TEMPLATE_STR)
     rag_chain = build_rag_chain(retriever, prompt)
     question = request.form['question']
     if question:
         # Use your rag_chain to get the response
-        collection_name = "DocumentChunk"
-
-        grouped_task = f"Given the information below, answer the question: '{question}'. Do your best to provide an accurate and concise answer. If the information does not directly answer the question, indicate that no relevant information is available. Always include quotes, author names, and titles from the context for references. Format as citation, author and quote. Answer with medium detail. Sometimes too much information can be given. Choose the most relevant information from the context "
-        response = (
-            client.query
-            .get(class_name=collection_name, properties=["text", "title", "authors", "index"])
-            .with_near_text({"concepts": [question]})
-            .with_limit(5)
-            .with_generate(grouped_task=grouped_task)
-            .do()
-        )
-        #print(response)
-
-        #response["data"]["Get"][collection_name][0]["_additional"]["generate"]["groupedResult"]
+        response = rag_chain.invoke(question)
         #Return question and answer in JSON format
-        return jsonify(question=question, answer=response["data"]["Get"][collection_name][0]["_additional"]["generate"]["groupedResult"])
+        return jsonify(question=question, answer=response)
     return jsonify(error="No question provided"), 400
+
+
+# @app.route('/ask', methods=['POST'])
+# def ask_question():
+#
+#     port = request.headers.get('Database-Port', '8081')
+#     client = weaviate.Client(
+#         url=f"http://localhost:{port}",  # Dynamically set the port
+#         additional_headers={"X-OpenAI-Api-Key": os.getenv('OPENAI_API_KEY')}
+#     )
+#     retriever = initialize_cloud_retriever(port)
+#     prompt = setup_prompt(TEMPLATE_STR)
+#     rag_chain = build_rag_chain(retriever, prompt)
+#     question = request.form['question']
+#     if question:
+#         # Use your rag_chain to get the response
+#         collection_name = "DocumentChunk"
+#
+#         grouped_task = f"Given the information below, answer the question: '{question}'. Do your best to provide an accurate and concise answer. If the information does not directly answer the question, indicate that no relevant information is available. Always include quotes, author names, and titles from the context for references. Format as citation, author and quote. Answer with medium detail. Sometimes too much information can be given. Choose the most relevant information from the context "
+#         response = (
+#             client.query
+#             .get(class_name=collection_name, properties=["text", "title", "authors", "index"])
+#             .with_near_text({"concepts": [question]})
+#             .with_limit(5)
+#             .with_generate(grouped_task=grouped_task)
+#             .do()
+#         )
+#         print(response)
+#
+#         print(response["data"]["Get"][collection_name][0]["_additional"]["generate"]["groupedResult"])
+#         #Return question and answer in JSON format
+#         return jsonify(question=question, answer=response["data"]["Get"][collection_name][0]["_additional"]["generate"]["groupedResult"])
+#     return jsonify(error="No question provided"), 400
 
 
 if __name__ == '__main__':
