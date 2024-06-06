@@ -31,18 +31,30 @@ def get_document_details(doi, email):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36'
     }
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()
-    data = response.json()
-    pdf_url = data.get('best_oa_location', {}).get('url_for_pdf', '')
-    landing_page_url = data.get('best_oa_location', {}).get('url_for_landing_page', '')
-    title = data.get('title', 'Unknown Title')
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        data = response.json()
 
-    # Correctly handle z_authors being None
-    z_authors = data.get('z_authors') or []
-    authors = [f"{author.get('given', '')} {author.get('family', '')}".strip() for author in z_authors if author.get('given') or author.get('family')]
+        if data is None:
+            logging.error(f"No data returned from API for DOI: {doi_url}")
+            return None, 'Unknown Title', []
 
-    return (pdf_url if pdf_url else landing_page_url, title, authors)
+        pdf_url = data.get('best_oa_location', {}).get('url_for_pdf', '')
+        landing_page_url = data.get('best_oa_location', {}).get('url_for_landing_page', '')
+        title = data.get('title', 'Unknown Title')
+
+        z_authors = data.get('z_authors') or []
+        authors = [f"{author.get('given', '')} {author.get('family', '')}".strip() for author in z_authors if author.get('given') or author.get('family')]
+
+        return (pdf_url if pdf_url else landing_page_url, title, authors)
+
+    except requests.exceptions.HTTPError as e:
+        logging.error(f"HTTP error occurred while fetching document details: {e}")
+        return None, 'Unknown Title', []
+    except Exception as e:
+        logging.error(f"An unexpected error occurred: {e}")
+        return None, 'Unknown Title', []
 
 
 def get_pdf_url(doi, email):
