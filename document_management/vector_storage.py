@@ -4,6 +4,9 @@ from langchain_openai.embeddings import OpenAIEmbeddings
 from weaviate.embedded import EmbeddedOptions
 from document_management.document_chunker import load_and_chunk_document
 import os
+from langchain.storage import InMemoryByteStore
+from langchain.retrievers.multi_vector import MultiVectorRetriever
+
 
 def initialize_vectorstore(chunks):
     # Set up the Weaviate client
@@ -60,18 +63,29 @@ def initialize_vectorstore(chunks):
 
 def initialize_cloud_retriever(port="8080"):
     client = weaviate.Client(
-        url=f"http://localhost:{port}",  # Dynamically set the port
+        url=f"http://localhost:{port}",
         additional_headers={"X-OpenAI-Api-Key": os.getenv('OPENAI_API_KEY')}
     )
 
-    # Initialize the vector store with the correct index and text key
     vectorstore = Weaviate(
         client=client,
-        index_name="DocumentChunk",  # Ensure this matches your class name in Weaviate
-        text_key="text"  # This should be the field that contains the main text data
+        index_name="DocumentChunk",
+        text_key="text"
     )
 
-    return vectorstore.as_retriever()
+    store = InMemoryByteStore()
+    id_key = "doc_id"
+
+    retriever = MultiVectorRetriever(
+        vectorstore=vectorstore,
+        byte_store=store,
+        id_key=id_key,
+    )
+
+    return retriever
+
+
+
 
 
 
