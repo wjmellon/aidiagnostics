@@ -43,7 +43,7 @@ df = df.explode('URLs').dropna(subset=['URLs'])
 
 client = weaviate.Client(
     url=f"http://localhost:8081",  # Dynamically set the port
-    additional_headers={"X-OpenAI-Api-Key": os.getenv('OPENAI_API_KEY')}
+    additional_headers={"X-OpenAI-Api-Key": os.getenv("OPENAI_API_KEY")}
 )
 
 # client = weaviate.Client(embedded_options=EmbeddedOptions(additional_env_vars={
@@ -56,14 +56,15 @@ chunk_class = {
         {"name": "text", "dataType": ["text"], "description": "Chunk of text"},
         {"name": "title", "dataType": ["string"], "description": "Title of the document"},
         {"name": "authors", "dataType": ["string"], "description": "Authors of the document"},
-        {"name": "index", "dataType": ["int"], "description": "Index of the chunk"}
+        {"name": "index", "dataType": ["int"], "description": "Index of the chunk"},
+        {"name": "doi_url", "dataType": ["string"], "description": "DOI link of paper"}
     ],
     "vectorizer": "text2vec-openai",
     "moduleConfig": {
         "generative-openai": {}
     }
 }
-#client.schema.delete_all()
+client.schema.delete_all()
 client.schema.create_class(chunk_class)
 
 # Scrape, chunk, and upload to Weaviate
@@ -80,7 +81,8 @@ with client.batch as batch:
                     "title": title,
                     "authors": authors,
                     "text": chunk,
-                    "index": i
+                    "index": i,
+                    "doi_url" : url
                 },
                 class_name="DocumentChunk"
             )
