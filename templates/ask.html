@@ -227,6 +227,8 @@ body {
     justify-content: center;
     text-align: center;
     transition: background-color 0.3s, color 0.3s;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
 }
 
 .common-questions button:hover {
@@ -284,40 +286,76 @@ body {
 }
 
 .input-field {
-    width: 100%;
+    display: flex;
+    align-items: center;
     position: relative;
+    width: 100%;
+    padding:0 10px;
+
+
 }
 
 .input-field input {
-    width: calc(100% - 80px);
+    flex-grow: 1;
     padding: 10px;
-    border: 1px solid transparent;
+    border: 1px solid #ccc;
     border-radius: 3px;
     outline: none;
     height: 40px;
+         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .input-field button {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    border: none;
-    width: 60px;
     height: 40px;
+    color: #51989E;
+    border: 1px solid #ccc;
     border-radius: 3px;
-    color: white;
-    background: #51989E;
-    outline: none;
+    padding: 0 15px;
     cursor: pointer;
+    background-color: #white;
     display: flex;
     justify-content: center;
     align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-left: 5px;
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s,box-shadow 0.3s; /* Smooth transition for background, color, and border */
+
+
 }
 
+.input-field button:hover {
+    color: white;
+    background-color: #51989E;
+    border-color: #51989E; /* Optional: change border color on hover */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+#mic-button {
+    background: white;
+    border: 1px solid #ccc;
+    color: #51989E;
+    width: 40px; /* Ensures the button is square */
+    justify-content: center;
+    display: flex;
+    margin-right: 5px;
+}
+
+#mic-button i.fa-microphone {
+    color: #51989E;  /* Default icon color */
+    transition: color 0.3s; /* Smooth color transition for a better visual effect */
+}
+
+#mic-button:hover {
+    background-color: #51989E;
+    border-color: #51989E;
+}
+
+#mic-button:hover i.fa-microphone {
+    color: white; /* Icon color changes when the button is hovered */
+}
 .loading-spinner {
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #3F7277;
+    border: 4px solid #3F7277;
+    border-top: 4px solid #f3f3f3;
     border-radius: 50%;
     width: 20px;
     height: 20px;
@@ -382,12 +420,13 @@ body {
                 <button onclick="submitPredefinedQuestion('How do I know if I have skin cancer?')">How do I know if I have skin cancer?</button>
             </div>
         </div>
-        <div class="typing-area">
-            <div class="input-field">
-                <input type="text" placeholder="Ask a question about skin cancer" required onkeypress="handleKeyPress(event)">
-                <button id="send-button" onclick="submitQuestion()">Send</button>
-            </div>
-        </div>
+       <div class="typing-area">
+    <div class="input-field">
+        <button id="mic-button" onclick="startDictation()" title="Use voice"><i class="fa fa-microphone"></i></button>
+        <input type="text" placeholder="Ask a question about skin cancer" required onkeypress="handleKeyPress(event)">
+        <button id="send-button" onclick="submitQuestion()">Send</button>
+    </div>
+</div>
     </div>
 
     <script>
@@ -471,6 +510,29 @@ body {
                 }
             }
         }
+       function startDictation() {
+    if (window.hasOwnProperty('webkitSpeechRecognition')) {
+        const recognition = new webkitSpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = "en-US";
+        recognition.start();
+
+        recognition.onresult = function(e) {
+            const transcript = e.results[0][0].transcript;
+            document.querySelector('.input-field input').value = transcript;
+            recognition.stop();
+            // Adding a delay to ensure the user is done talking
+            setTimeout(() => {
+                document.getElementById('send-button').click();  // Automatically click send after speech is recognized
+            }, 500); // 500ms delay
+        };
+
+        recognition.onerror = function(e) {
+            recognition.stop();
+        }
+    }
+}
     </script>
 </body>
 </html>
