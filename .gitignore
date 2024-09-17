@@ -1,0 +1,5 @@
+/.venv
+/.idea
+/.cache
+.gitignore
+# /document_management/__pycache__/document_chunker.cpython-312.pyc
