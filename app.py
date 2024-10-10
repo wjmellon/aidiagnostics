@@ -3,7 +3,7 @@ import sys
 from flask import Flask, request, jsonify, render_template
 from data_processing.data_fetcher import download_document
 from document_management.document_chunker import load_and_chunk_document
-from document_management.vector_storage import initialize_vectorstore, initialize_cloud_retriever
+from document_management.vector_storage import initialize_vectorstore, initialize_port_retriever
 from rag_components.generator_setup import setup_prompt, build_rag_chain
 import ssl
 import os
@@ -50,7 +50,7 @@ TEMPLATE_STR = """You are an assistant for question-answering tasks. These quest
 # download_document(URL, PATH_TO_SAVE)
 #chunks = load_and_chunk_document(PATH_TO_SAVE)
 #chunks = split_text(PATH_TO_SAVE,100)
-# retriever = initialize_cloud_retriever()
+# retriever = initialize_port_retriever()
 # prompt = setup_prompt(TEMPLATE_STR)
 # rag_chain = build_rag_chain(retriever, prompt)
 
@@ -74,7 +74,7 @@ TEMPLATE_STR = """You are an assistant for question-answering tasks. These quest
 def ask_question():
     port = request.headers.get('Database-Port', '8081')
     print(f"Received request with Database-Port: {port}")  # Debug print
-    retriever = initialize_cloud_retriever(port)
+    retriever = initialize_port_retriever(port)
     prompt = setup_prompt(TEMPLATE_STR)
     rag_chain = build_rag_chain(retriever, prompt)
     question = request.form['question']
@@ -95,7 +95,7 @@ def ask_question():
 #     print(f"Received request with Database-Port: {port}")  # Debug print
 #
 #     # Initialize retriever each time to ensure it uses the correct port
-#     vectorretreiver = initialize_cloud_retriever(port)
+#     vectorretreiver = initialize_port_retriever(port)
 #     print(f"Retriever initialized with port: {port}")  # Additional debug print
 #
 #     client = weaviate.Client(
@@ -130,7 +130,7 @@ def ask_question():
 # @app.route('/ask', methods=['POST'])
 # def ask_question():
 #     port = request.headers.get('Database-Port', '8081')
-#     retriever = initialize_cloud_retriever(port)
+#     retriever = initialize_port_retriever(port)
 #     question = request.form['question']
 #
 #     logging.basicConfig()
@@ -165,7 +165,7 @@ def ask_question():
 # @app.route('/ask', methods=['POST'])
 # def ask_question():
 #     port = request.headers.get('Database-Port', '8081')
-#     retriever = initialize_cloud_retriever(port)
+#     retriever = initialize_port_retriever(port)
 #     question = request.form['question']
 #     llm = ChatOpenAI(temperature=0)
 #     retriever_from_llm = MultiQueryRetriever.from_llm(
