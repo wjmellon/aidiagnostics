@@ -68,7 +68,7 @@ from langchain.retrievers.document_compressors import EmbeddingsFilter
 from langchain_openai import OpenAIEmbeddings
 from langchain.retrievers import ContextualCompressionRetriever
 
-def initialize_cloud_retriever(port="8080"):
+def initialize_port_retriever(port="8080"):
     client = weaviate.Client(
         url=f"http://localhost:{port}",
         additional_headers={"X-OpenAI-Api-Key": os.getenv('OPENAI_API_KEY')}
