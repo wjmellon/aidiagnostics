@@ -3,7 +3,7 @@ import sys
 from flask import Flask, request, jsonify, render_template
 from data_processing.data_fetcher import download_document
 from document_management.document_chunker import load_and_chunk_document
-from document_management.vector_storage import initialize_vectorstore, initialize_cloud_retriever
+from document_management.vector_storage import initialize_vectorstore, initialize_port_retriever
 from rag_components.generator_setup import setup_prompt, build_rag_chain,query_llms_concurrently
 import ssl
 import os
@@ -63,7 +63,7 @@ def ask_question():
     print(f"Received request with Database-Port: {port}")  # Debug print
 
     # Initialize the retriever (assuming it's defined elsewhere)
-    retriever = initialize_cloud_retriever(port)  # Adjust based on your retriever setup
+    retriever = initialize_port_retriever(port)  # Adjust based on your retriever setup
 
     # Setup the prompt (use TEMPLATE_STR from your context)
     prompt = setup_prompt(TEMPLATE_STR)

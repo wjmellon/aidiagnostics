@@ -68,21 +68,55 @@ from langchain.retrievers.document_compressors import EmbeddingsFilter
 from langchain_openai import OpenAIEmbeddings
 from langchain.retrievers import ContextualCompressionRetriever
 
-def initialize_cloud_retriever(port="8080"):
+import weaviate
+from langchain_community.vectorstores.weaviate import Weaviate
+from langchain_openai.embeddings import OpenAIEmbeddings
+import os
+
+def initialize_port_retriever(port="8080"):
+    # Initialize Weaviate client connecting to the Docker instance
     client = weaviate.Client(
         url=f"http://localhost:{port}",
         additional_headers={"X-OpenAI-Api-Key": os.getenv('OPENAI_API_KEY')}
     )
 
+    # Specify the model to use for embedding (e.g., 'text2vec-openai' or 'multi2vec-clip')
+    # This could be dynamic or based on a config
+    embedding_model = os.getenv('EMBEDDING_MODEL', 'text2vec-openai')  # Default to 'text2vec-openai'
+
+    # Customize embedding model based on environment variables or configuration
+    if embedding_model == 'text2vec-openai':
+        # OpenAI embeddings model
+        embeddings = OpenAIEmbeddings(
+            model="text-embedding-ada-002"  # Specify the OpenAI embedding model
+        )
+    elif embedding_model == 'multi2vec-clip':
+        # Use the CLIP model specified in the docker-compose.yml
+        embeddings = OpenAIEmbeddings(
+            model="multi2vec-clip"  # Assuming the Weaviate client handles this model
+        )
+    else:
+        raise ValueError(f"Unsupported embedding model: {embedding_model}")
+
+    # Weaviate vector store setup for the existing "DocumentChunk" collection
     vectorstore = Weaviate(
         client=client,
-        index_name="DocumentChunk",
-        text_key="text",
-        attributes=["title", "authors", "doi_url"]
+        index_name="DocumentChunk",  # Use the existing collection name
+        text_key="text",  # Specify the field used for the text data
+        attributes=["title", "authors", "doi_url"]  # Attributes to retrieve as metadata
     )
 
-    retriever = vectorstore.as_retriever(search_kwargs={"k": 5, "score_threshold": 0.8, "include_metadata": True, "metadata_fields": ["text", "authors", "title", "doi_url"] })
+    # Initialize retriever with search parameters
+    retriever = vectorstore.as_retriever(
+        search_kwargs={
+            "k": 5,  # Number of results to return
+            "score_threshold": 0.8,  # Relevance score threshold
+            "include_metadata": True,  # Include metadata in the results
+            "metadata_fields": ["text", "authors", "title", "doi_url"]  # Metadata fields to include
+        }
+    )
 
     return retriever
+
 
 
