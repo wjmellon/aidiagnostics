@@ -128,7 +128,7 @@ def query_llms_concurrently(retriever, prompt, question):
     print("Querying LLaMA model...")
     llama_response = llama_model(question, max_length=256)
     print(f"LLaMA response: {llama_response[0]['generated_text']}")
-\
+
     response_3 = llama_response[0]['generated_text']
     print("All queries completed.")
 

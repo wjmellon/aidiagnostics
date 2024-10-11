@@ -42,7 +42,7 @@ df['URLs'] = df['URL'].apply(lambda x: re.findall(r'https?://\S+', x))
 df = df.explode('URLs').dropna(subset=['URLs'])
 
 client = weaviate.Client(
-    url=f"http://localhost:8081",  # Dynamically set the port
+    url=f"http://localhost:8080",  # Dynamically set the port
     additional_headers={"X-OpenAI-Api-Key": os.getenv("OPENAI_API_KEY")}
 )
 
