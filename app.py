@@ -73,10 +73,10 @@ def ask_question():
 
     if question:
         # Call the function to query both LLMs synchronously
-        response_1, response_2 = query_llms_concurrently(retriever, prompt, question)
+        response_1, response_2, response3 = query_llms_concurrently(retriever, prompt, question)
 
         # Combine the responses (you can modify how you combine them)
-        combined_response = f"LLM 1 response: {response_1}\nLLM 2 response: {response_2}"
+        combined_response = f"LLM 1 response: {response_1}\nLLM 2 response: {response_2}\nLlama response: {response3}"
 
         print(f"Database Port: {port}")
         print(f"Response Length: {len(combined_response)}")

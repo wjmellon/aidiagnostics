@@ -16,7 +16,7 @@ print(os.environ['OPENAI_API_KEY'])
 
 # Define your constants and configurations
 URL = "https://github.com/wjmellon/aidiagnostics/blob/main/data/aggregated.txt"
-PATH_TO_SAVE = "data/aggregatedtext.txt"
+PATH_TO_SAVE = "data/aggregated.txt"
 TEMPLATE_STR = """You are an assistant for question-answering tasks. These questions are about skin cancer.
 You must use the provided pieces of context to answer questions. 
 If you don't know the answer, just say that you don't know. 
