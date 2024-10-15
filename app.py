@@ -41,7 +41,7 @@ TEMPLATE_STR = """You are an assistant for question-answering tasks. These quest
 # # Initialize Weaviate client
 # client = weaviate.Client(
 #     url="https://aichatpublic-zrouzts8.weaviate.network",  # Ensure this is your correct cloud instance URL
-#     auth_client_secret=weaviate.auth.AuthApiKey(api_key="uIV5lCa7lbpj4sjDyBIrbicGquVDbWuTcZHE"),
+#     auth_client_secret=weaviate.auth.AuthApiKey(api_key="(API KEY HAS BEEN REMOVED AND NEEDS TO BE FIXED"),
 #     additional_headers={ "X-OpenAI-Api-Key":os.environ.get('OPENAI_API_KEY', 'API key not set') }
 # )
 
