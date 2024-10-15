@@ -115,3 +115,6 @@ weaviate-client==4.5.7
 Werkzeug==3.0.1
 yarl==1.9.4
 zipp==3.18.1
+langchain
+ollama==0.3.3
+pdfplumber==0.11.4

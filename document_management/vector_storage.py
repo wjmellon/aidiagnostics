@@ -9,8 +9,6 @@ from langchain.retrievers.multi_vector import MultiVectorRetriever
 from langchain.storage import InMemoryByteStore
 
 
-
-
 def initialize_vectorstore(chunks):
     # Set up the Weaviate client
     client = weaviate.Client(embedded_options=EmbeddedOptions(additional_env_vars={

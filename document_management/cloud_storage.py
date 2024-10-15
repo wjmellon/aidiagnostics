@@ -10,20 +10,25 @@ import time
 
 def ensure_doi_url(doi):
     """Ensure that the DOI is formatted as a full URL."""
+    print(f"Ensuring DOI URL for: {doi}")
     return f"https://doi.org/{doi}" if not doi.startswith('http://') and not doi.startswith('https://') else doi
 
 def query_unpaywall(query_terms, email):
     """Query the Unpaywall API for multiple search terms and collect DOIs."""
+    print(f"Querying Unpaywall for terms: {query_terms}")
     dois = []
     for query_term in query_terms:
         formatted_query = query_term.replace(" ", "%20")
         url = f"https://api.unpaywall.org/v2/search/?query={formatted_query}&email={email}&is_oa=true"
+        print(f"Querying URL: {url}")
         response = requests.get(url)
         response.raise_for_status()
         results = response.json()
         term_dois = [result['response']['doi'] for result in results['results']]
+        print(f"Found DOIs for term '{query_term}': {term_dois}")
         dois.extend(term_dois)
     return dois
+
 def get_document_details(doi, email):
     """Retrieve document details including PDF URL, title, and authors."""
     doi_url = ensure_doi_url(doi)
@@ -31,6 +36,7 @@ def get_document_details(doi, email):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36'
     }
+    print(f"Fetching document details for DOI: {doi_url}")
     try:
         response = requests.get(url, headers=headers)
         response.raise_for_status()
@@ -47,6 +53,7 @@ def get_document_details(doi, email):
         z_authors = data.get('z_authors') or []
         authors = [f"{author.get('given', '')} {author.get('family', '')}".strip() for author in z_authors if author.get('given') or author.get('family')]
 
+        print(f"Document details - Title: {title}, Authors: {authors}, PDF URL: {pdf_url}, Landing Page URL: {landing_page_url}")
         return (pdf_url if pdf_url else landing_page_url, title, authors)
 
     except requests.exceptions.HTTPError as e:
@@ -56,7 +63,6 @@ def get_document_details(doi, email):
         logging.error(f"An unexpected error occurred: {e}")
         return None, 'Unknown Title', []
 
-
 def get_pdf_url(doi, email):
     """Retrieve the PDF or landing page URL for a DOI from Unpaywall API."""
     doi_url = ensure_doi_url(doi)
@@ -64,11 +70,13 @@ def get_pdf_url(doi, email):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36'
     }
+    print(f"Fetching PDF URL for DOI: {doi_url}")
     response = requests.get(url, headers=headers)
     response.raise_for_status()
     data = response.json()
     pdf_url = data.get('best_oa_location', {}).get('url_for_pdf')
     landing_page_url = data.get('best_oa_location', {}).get('url_for_landing_page')
+    print(f"PDF URL: {pdf_url}, Landing Page URL: {landing_page_url}")
     return pdf_url if pdf_url else landing_page_url
 
 def download_and_extract_text(url):
@@ -76,16 +84,21 @@ def download_and_extract_text(url):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36'
     }
+    print(f"Downloading and extracting text from URL: {url}")
     try:
         response = requests.get(url, headers=headers)
         response.raise_for_status()
         content_type = response.headers.get('Content-Type', '')
         if 'application/pdf' in content_type:
             with pdfplumber.open(io.BytesIO(response.content)) as pdf:
-                return ''.join(page.extract_text() or '' for page in pdf.pages)
+                text = ''.join(page.extract_text() or '' for page in pdf.pages)
+                print(f"Extracted text from PDF: {text[:100]}...")  # Print first 100 characters for brevity
+                return text
         else:
             # If not a PDF, assume HTML or a text content type and scrape text
-            return scrape_and_clean_text(response.content)
+            text = scrape_and_clean_text(response.content)
+            print(f"Extracted text from HTML: {text[:100]}...")  # Print first 100 characters for brevity
+            return text
     except requests.exceptions.HTTPError as e:
         print(f"HTTP error occurred: {e}")
         return None
@@ -101,6 +114,7 @@ def scrape_and_clean_text(content):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36'
     }
+    print(f"Scraping and cleaning text from content.")
     # Check if the content is a URL, assuming it's a string and starts with http:// or https://
     if isinstance(content, str) and (content.startswith("http://") or content.startswith("https://")):
         response = requests.get(content, headers=headers)
@@ -114,16 +128,17 @@ def scrape_and_clean_text(content):
         for script in soup(["script", "style", "header", "footer", "nav", "form"]):
             script.decompose()
         cleaned_text = ' '.join(soup.stripped_strings)
+        print(f"Cleaned text: {cleaned_text[:100]}...")  # Print first 100 characters for brevity
         return cleaned_text
     except Exception as e:
         print(f"Failed to scrape or clean HTML: {e}")
         return None
 
-
 import tiktoken
 
 def chunk_text(source_text, max_tokens=6000, chunk_size=200, overlap_size=50):
     """Splits the text into smaller chunks ensuring each chunk stays within the token limit."""
+    print(f"Chunking text into smaller pieces.")
     encoding = tiktoken.get_encoding("cl100k_base")  # Use the encoding used by the OpenAI model
 
     words = source_text.split()
@@ -148,9 +163,9 @@ def chunk_text(source_text, max_tokens=6000, chunk_size=200, overlap_size=50):
 
     return chunks
 
-
 def initialize_weaviate():
     """Initializes the Weaviate client and configures the schema."""
+    print(f"Initializing Weaviate client.")
     client = weaviate.Client(url="http://localhost:8080", additional_headers={"X-OpenAI-Api-Key": os.getenv(("OPENAI_API_KEY"))})
     client.schema.delete_all()
     chunk_class = {
@@ -170,11 +185,11 @@ def initialize_weaviate():
     client.schema.create_class(chunk_class)
     return client
 
-
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def upload_chunks_to_weaviate(client, text_chunks, title, authors, doi_url):
     """Uploads text chunks to Weaviate."""
+    print(f"Uploading chunks to Weaviate.")
     batch_size = 20
     retries = 3
     retry_delay = 2
@@ -220,13 +235,18 @@ if __name__ == "__main__":
         "Cutaneous Lymphoma", "Kaposi Sarcoma", "Actinic Keratosis",
         "Dermatofibrosarcoma Protuberans (DFSP)", "Sebaceous Carcinoma", "Atypical Fibroxanthoma"
     ]
+    print(f"Initializing Weaviate client.")
     weaviate_client = initialize_weaviate()
+    print(f"Querying Unpaywall for DOIs.")
     dois = query_unpaywall(query_terms, email)
     for doi in dois:
+        print(f"Processing DOI: {doi}")
         url, title, authors = get_document_details(doi, email)
         full_text = download_and_extract_text(url)
         if full_text:
+            print(f"Chunking text for DOI: {doi}")
             text_chunks = chunk_text(full_text)
+            print(f"Uploading chunks for DOI: {doi}")
             upload_chunks_to_weaviate(weaviate_client, text_chunks, title, authors, url)
         else:
             print(f"No text available for DOI: {doi}")
