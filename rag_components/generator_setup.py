@@ -15,7 +15,7 @@ def setup_prompt(template_str):
 def initialize_llms():
     llm_1 = ChatOpenAI(model="gpt-3.5-turbo", temperature=0, streaming=True)
     llm_2 = ChatOpenAI(model="gpt-4", temperature=0, streaming=True)
-    llm_3 = ChatOllama(model="llama3.2:1b", streaming=True)
+    llm_3 = ChatOllama(model="llama3.2:1b",temperature = 0, streaming=True)
 
     return llm_1, llm_2, llm_3
     
