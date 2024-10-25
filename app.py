@@ -2,8 +2,7 @@ import sys
 from flask import Flask, request, render_template
 from document_management.vector_storage import initialize_port_retriever
 from rag_components.generator_setup import setup_prompt, initialize_llms, build_llm_chain
-import ssl
-import os
+import ssl, os, json
 
 # Create Flask app
 app = Flask(__name__, template_folder="templates")
@@ -69,6 +68,33 @@ TEMPLATE_STR = """You are an assistant for question-answering tasks. These quest
 #     # For GET requests or if question is empty, render template without response
 #     return render_template('ask.html')
 
+
+def log_responses(question, response_1, response_2, response_3, file_path='response.json'):
+    # Structure data in JSON format
+    data = {
+        "question": question,
+        "responses": {
+            "LLM_1": response_1,
+            "LLM_2": response_2,
+            "LLM_3": response_3
+        }
+    }
+    
+    # Append to the JSON file
+    try:
+        # Open and read existing data
+        with open(file_path, 'r+') as f:
+            file_data = json.load(f)
+            # Append new data
+            file_data.append(data)
+            # Reset file position and overwrite with updated data
+            f.seek(0)
+            json.dump(file_data, f, indent=4)
+    except (FileNotFoundError, json.JSONDecodeError):
+        # Create a new file or initialize as list if file is empty or invalid
+        with open(file_path, 'w') as f:
+            json.dump([data], f, indent=4)
+
 def ask_question(llm_instance, retriever, prompt):
     question = input("Please enter your question: ")
 
@@ -83,7 +109,9 @@ def ask_question(llm_instance, retriever, prompt):
             llm_instance.get_llm3()
         )
 
-        # Combine the responses (you can modify how you combine them)
+        # Log responses to a JSON file
+        log_responses(question, response_1, response_2, response_3)
+
         combined_response = f"LLM 1 response: {response_1}\nLLM 2 response: {response_2}\nLLM 3 response: {response_3}"
 
         print(f"Response Length: {len(combined_response)}")
