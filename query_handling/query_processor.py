@@ -1,9 +1,8 @@
-
-# possibly add a simple UI
-
 def handle_query(rag_chain):
-    query = ""
-    while query != "exit":
-        query = input("Ask a question about skin cancer or type 'exit' to quit: ")
-        response = rag_chain.invoke(query)
-        print(response)
+    """Handle user queries in a loop."""
+    while True:
+        question = input("Please enter your question (or type 'exit' to quit): ")
+        if question.lower() == 'exit':
+            break
+        response = rag_chain.invoke(question)
+        print(f"Answer: {response}")

@@ -1,16 +1,10 @@
-from langchain_community.document_loaders import TextLoader
-from langchain.text_splitter import CharacterTextSplitter
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-# look into best chunking strategy
-
-def load_and_chunk_document(path, chunk_size=300, chunk_overlap=50):
-    with open(path, 'r', encoding='utf-8', errors='replace') as file:
-        content = file.read()  # Read the entire content of the file
-
-        # Now write the content back to the same file in UTF-8 encoding
-    with open(path, 'w', encoding='utf-8') as file:
-        file.write(content)
-    loader = TextLoader(path)
-    documents = loader.load()
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
-    return text_splitter.split_documents(documents)
+def load_and_chunk_document(file_path, chunk_size=150, overlap_size=25):
+    """Load text from a file and split it into chunks."""
+    with open(file_path, 'r', encoding='utf-8') as f:
+        text = f.read()
+    words = text.split()
+    chunks = []
+    for i in range(0, len(words), chunk_size - overlap_size):
+        chunk = " ".join(words[i:i + chunk_size])
+        chunks.append({'text': chunk})
+    return chunks
