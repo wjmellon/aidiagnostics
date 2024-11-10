@@ -4,29 +4,12 @@ import json
 from document_management.vector_storage import initialize_port_retriever
 from rag_components.generator_setup import setup_prompt, initialize_llms, query_llms
 from dotenv import load_dotenv
+import csv
+import pandas as pd
 
 # Load environment variables from .env file
 load_dotenv()
-
-def log_responses(question, responses, file_path='response.json'):
-    data = {
-        "question": question,
-        "responses": {
-            "LLM_1": responses[0],
-            "LLM_2": responses[1],
-            "LLM_3": responses[2]
-        }
-    }
-    try:
-        with open(file_path, 'r+') as f:
-            file_data = json.load(f)
-            file_data.append(data)
-            f.seek(0)
-            json.dump(file_data, f, indent=4)
-    except (FileNotFoundError, json.JSONDecodeError):
-        with open(file_path, 'w') as f:
-            json.dump([data], f, indent=4)
-
+    
 def main():
     # Ensure SSL context is set up properly
     ssl._create_default_https_context = ssl._create_unverified_context
@@ -34,7 +17,6 @@ def main():
     # Prompt the user for a question
     question = input("Enter your question about skin cancer: ").strip()
     if question:
-        # Retrieve the port from environment variables or default to '8081'
         port = os.getenv('WEAVIATE_PORT', '8081')
         retriever = initialize_port_retriever(port)
 
@@ -52,12 +34,34 @@ Question: {question} Context: {context} Answer:"""
         # Query the language models
         try:
             responses = query_llms(retriever, prompt, question, llms)
-            log_responses(question, responses)
+            print("LLM 1: ", responses[0])
+            print("LLM 2: ", responses[1])
+            print("LLM 3: ", responses[2])
+            print("LLM 4: ", responses[3])
 
-            # Print the responses to the terminal
-            print("\nResponses:")
-            for idx, response in enumerate(responses, start=1):
-                print(f"LLM_{idx} Response:\n{response}\n")
+            # Initialize CSV file if it doesn't exist
+            if not os.path.exists('response.csv'):
+                with open('response.csv', 'w', newline='') as csvfile:
+                    csv_writer = csv.writer(csvfile)
+                    csv_writer.writerow(['question', 'LLM_1', 'LLM_2', 'LLM_3', 'LLM_4'])
+                
+            # Strip any potential command artifacts from the response
+            # for i in range(len(responses)):
+            #     responses[i] = responses[i].replace(",", "").strip()
+                    
+            # Create a dictionary with the question and responses
+            data = {
+                'question': [question],
+                'LLM_1': [responses[0]],
+                'LLM_2': [responses[1]], 
+                'LLM_3': [responses[2]],
+                'LLM_4': [responses[3]]
+            }
+            
+            # Write the data df to the CSV file
+            df = pd.DataFrame(data)
+            df.to_csv('response.csv', mode='a', header=False, index=False)
+
         except Exception as e:
             print(f"An error occurred: {e}")
     else:
