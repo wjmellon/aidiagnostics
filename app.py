@@ -17,7 +17,7 @@ def main():
     # Prompt the user for a question
     question = input("Enter your question about skin cancer: ").strip()
     if question:
-        port = os.getenv('WEAVIATE_PORT', '8081')
+        port = os.getenv('WEAVIATE_PORT', '8080')
         retriever = initialize_port_retriever(port)
 
         # Define the prompt template
@@ -34,10 +34,6 @@ Question: {question} Context: {context} Answer:"""
         # Query the language models
         try:
             responses = query_llms(retriever, prompt, question, llms)
-            print("LLM 1: ", responses[0])
-            print("LLM 2: ", responses[1])
-            print("LLM 3: ", responses[2])
-            print("LLM 4: ", responses[3])
 
             # Initialize CSV file if it doesn't exist
             if not os.path.exists('response.csv'):
